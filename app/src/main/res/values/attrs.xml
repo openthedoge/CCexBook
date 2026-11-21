@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="qzPrimary" format="color" />
+    <attr name="qzBg" format="color" />
+    <attr name="qzSurface" format="color" />
+    <attr name="qzChipBg" format="color" />
+    <attr name="qzText" format="color" />
+    <attr name="qzTextSub" format="color" />
+    <attr name="qzDivider" format="color" />
+    <attr name="qzGreen" format="color" />
+    <attr name="qzGreenBg" format="color" />
+    <attr name="qzRed" format="color" />
+    <attr name="qzRedBg" format="color" />
+    <attr name="qzOrange" format="color" />
+    <attr name="qzOrangeBg" format="color" />
+    <attr name="qzPrimaryBg" format="color" />
+    <attr name="qzStroke" format="color" />
+    <attr name="qzOnPrimary" format="color" />
+</resources>

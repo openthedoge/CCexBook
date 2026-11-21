@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 浅色主题（纯白 + 科技蓝） -->
+    <color name="primaryLight">#3D6FE0</color>
+    <color name="primaryDarkLight">#2B54A8</color>
+    <color name="bgLight">#F4F6FA</color>
+    <color name="surfaceLight">#FFFFFF</color>
+    <color name="chipBgLight">#EDF1F7</color>
+    <color name="textLight">#1F2733</color>
+    <color name="textSubLight">#6B7686</color>
+    <color name="dividerLight">#E6EAF0</color>
+    <color name="greenLight">#2E9E5B</color>
+    <color name="greenBgLight">#E5F5EC</color>
+    <color name="redLight">#E0563F</color>
+    <color name="redBgLight">#FBEAE6</color>
+    <color name="orangeLight">#E8871E</color>
+    <color name="orangeBgLight">#FDF1E2</color>
+    <color name="primaryBgLight">#E8EFFC</color>
+    <color name="strokeLight">#E7EBF1</color>
+
+    <!-- 暗黑主题（深炭黑 + 冰蓝） -->
+    <color name="primaryDark">#5B9BFF</color>
+    <color name="statusBarDark">#171B22</color>
+    <color name="bgDark">#14171C</color>
+    <color name="surfaceDark">#1E222A</color>
+    <color name="chipBgDark">#2A3140</color>
+    <color name="textDark">#E9EDF2</color>
+    <color name="textSubDark">#97A1AE</color>
+    <color name="dividerDark">#2A2F3A</color>
+    <color name="greenDark">#3EC46D</color>
+    <color name="greenBgDark">#1D3328</color>
+    <color name="redDark">#F0645C</color>
+    <color name="redBgDark">#3A2422</color>
+    <color name="orangeDark">#F0A24B</color>
+    <color name="orangeBgDark">#3A2E1E</color>
+    <color name="primaryBgDark">#1F2C45</color>
+    <color name="strokeDark">#2A2F3A</color>
+
+    <!-- 中国红主题 -->
+    <color name="primaryRedLight">#C8423D</color>
+    <color name="statusRedLight">#8E2F29</color>
+    <color name="primaryRedBgLight">#FBEBE8</color>
+    <color name="primaryRedDark">#E06A60</color>
+    <color name="statusRedDark">#1E1312</color>
+    <color name="primaryRedBgDark">#3A2220</color>
+
+    <!-- 翡翠绿主题 -->
+    <color name="primaryGreenLight">#2E9E6B</color>
+    <color name="statusGreenLight">#1F6E4A</color>
+    <color name="primaryGreenBgLight">#E7F5EE</color>
+    <color name="primaryGreenDark">#4FC79A</color>
+    <color name="statusGreenDark">#122019</color>
+    <color name="primaryGreenBgDark">#1B332A</color>
+
+    <!-- 活力橙主题 -->
+    <color name="primaryOrangeLight">#E8871E</color>
+    <color name="statusOrangeLight">#A86410</color>
+    <color name="primaryOrangeBgLight">#FDF1E2</color>
+    <color name="primaryOrangeDark">#F0A24B</color>
+    <color name="statusOrangeDark">#241A10</color>
+    <color name="primaryOrangeBgDark">#3A2E1E</color>
+
+    <!-- 浪漫紫主题 -->
+    <color name="primaryPurpleLight">#7C5CD6</color>
+    <color name="statusPurpleLight">#5A40A0</color>
+    <color name="primaryPurpleBgLight">#F0ECFB</color>
+    <color name="primaryPurpleDark">#9F85E8</color>
+    <color name="statusPurpleDark">#1E1830</color>
+    <color name="primaryPurpleBgDark">#2A2440</color>
+
+    <!-- 纯黑（AMOLED）主题：页面底真纯黑，层级只能靠描边 -->
+    <color name="blackBg">#000000</color>
+    <color name="blackSurface">#0A0A0A</color>
+    <color name="blackChipBg">#141414</color>
+    <color name="blackStroke">#262626</color>
+    <color name="blackDivider">#1A1A1A</color>
+    <color name="blackText">#E6E6E6</color>
+    <color name="blackTextSub">#9A9A9A</color>
+
+    <!-- 通用 -->
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#9AA3AD</color>
+</resources>

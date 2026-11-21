@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/qzBg"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/qzPrimary">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="?attr/qzOnPrimary"
+            android:textSize="30sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/ui_108"
+            android:textColor="?attr/qzOnPrimary"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:elevation="3dp"
+                android:orientation="horizontal"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/totalTv"
+                        android:textColor="?attr/qzText"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/ui_105"
+                        android:textColor="?attr/qzTextSub"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/rateTv"
+                        android:textColor="?attr/qzGreen"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/ui_55"
+                        android:textColor="?attr/qzTextSub"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/todayTv"
+                        android:textColor="?attr/qzPrimary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/ui_13"
+                        android:textColor="?attr/qzTextSub"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:id="@+id/streakTv"
+                        android:textColor="?attr/qzOrange"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/ui_126"
+                        android:textColor="?attr/qzTextSub"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="4dp"
+                android:paddingLeft="4dp"
+                android:text="@string/ui_124"
+                android:textColor="?attr/qzText"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <com.ziruoling.quiz.ui.widget.BarChartView
+                    android:id="@+id/bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="110dp" />
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="4dp"
+                android:paddingLeft="4dp"
+                android:text="@string/ui_34"
+                android:textColor="?attr/qzText"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/typeBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/qzSurface"
+                android:orientation="vertical"
+                android:padding="14dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="4dp"
+                android:paddingLeft="4dp"
+                android:text="@string/ui_36"
+                android:textColor="?attr/qzText"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/bankBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/qzSurface"
+                android:orientation="vertical"
+                android:padding="14dp" />
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="4dp"
+                android:paddingLeft="4dp"
+                android:text="@string/ui_112"
+                android:textColor="?attr/qzText"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/examBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/qzSurface"
+                android:orientation="vertical"
+                android:padding="14dp" />
+
+            <TextView
+                android:id="@+id/btnClear"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_card_ripple"
+                android:gravity="center"
+                android:text="@string/ui_84"
+                android:textColor="?attr/qzRed"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btnClearWrong"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card_ripple"
+                android:gravity="center"
+                android:text="@string/ui_86"
+                android:textColor="?attr/qzRed"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btnClearFav"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card_ripple"
+                android:gravity="center"
+                android:text="@string/ui_83"
+                android:textColor="?attr/qzRed"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

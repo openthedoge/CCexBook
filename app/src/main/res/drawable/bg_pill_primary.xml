@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 快捷入口胶囊：主色浅底 + 全圆角 + 按压波纹 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#22000000">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/qzPrimaryBg" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+</ripple>

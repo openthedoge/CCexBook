@@ -1,0 +1,63 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ziruoling.quiz'
+    compileSdk 34
+
+    defaultConfig {
+        // 共存版：包名带 .c，可与原版（com.ziruoling.quiz）同时安装。
+        // 想回到原包名（能覆盖原版安装）只需改回 "com.ziruoling.quiz"。
+        applicationId "com.ziruoling.quiz.c"
+        minSdk 21
+        targetSdk 34
+        versionCode 23
+        versionName "1.6.1"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('ziruoling.keystore')
+            storePassword 'ziruoling123456'
+            keyAlias 'ziruoling'
+            keyPassword 'ziruoling123456'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            all {
+                // Robolectric 运行时 android-all 依赖走国内镜像
+                systemProperty 'robolectric.dependency.repo.url', 'https://maven.aliyun.com/repository/public'
+                systemProperty 'robolectric.dependency.repo.id', 'aliyun'
+                // 单元测试固定中文环境（应用默认按系统语言选中文/英文）
+                systemProperty 'user.language', 'zh'
+                systemProperty 'user.country', 'CN'
+            }
+        }
+    }
+}
+
+dependencies {
+    // 零第三方依赖：全部使用 Android 官方框架 API
+    // junit / robolectric 仅用于本地 JVM 单元测试，不进入 APK
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+}

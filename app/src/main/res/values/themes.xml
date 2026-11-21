@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="AppTheme.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryLight</item>
+        <item name="android:colorPrimaryDark">@color/primaryDarkLight</item>
+        <item name="android:colorAccent">@color/primaryLight</item>
+        <item name="android:windowBackground">@color/bgLight</item>
+        <item name="android:colorBackground">@color/bgLight</item>
+        <item name="android:statusBarColor">@color/primaryDarkLight</item>
+        <item name="android:navigationBarColor">@color/bgLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+
+        <item name="qzPrimary">@color/primaryLight</item>
+        <item name="qzBg">@color/bgLight</item>
+        <item name="qzSurface">@color/surfaceLight</item>
+        <item name="qzChipBg">@color/chipBgLight</item>
+        <item name="qzText">@color/textLight</item>
+        <item name="qzTextSub">@color/textSubLight</item>
+        <item name="qzDivider">@color/dividerLight</item>
+        <item name="qzGreen">@color/greenLight</item>
+        <item name="qzGreenBg">@color/greenBgLight</item>
+        <item name="qzRed">@color/redLight</item>
+        <item name="qzRedBg">@color/redBgLight</item>
+        <item name="qzOrange">@color/orangeLight</item>
+        <item name="qzOrangeBg">@color/orangeBgLight</item>
+        <item name="qzPrimaryBg">@color/primaryBgLight</item>
+        <item name="qzStroke">@color/strokeLight</item>
+        <item name="qzOnPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryDark</item>
+        <item name="android:colorPrimaryDark">@color/statusBarDark</item>
+        <item name="android:colorAccent">@color/primaryDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+        <item name="android:colorBackground">@color/bgDark</item>
+        <item name="android:statusBarColor">@color/statusBarDark</item>
+        <item name="android:navigationBarColor">@color/bgDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+
+        <item name="qzPrimary">@color/primaryDark</item>
+        <item name="qzBg">@color/bgDark</item>
+        <item name="qzSurface">@color/surfaceDark</item>
+        <item name="qzChipBg">@color/chipBgDark</item>
+        <item name="qzText">@color/textDark</item>
+        <item name="qzTextSub">@color/textSubDark</item>
+        <item name="qzDivider">@color/dividerDark</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryBgDark</item>
+        <item name="qzStroke">@color/strokeDark</item>
+        <item name="qzOnPrimary">#0E1116</item>
+    </style>
+
+    <!-- ================= 多主题配色（红 / 绿 / 橙 / 紫） ================= -->
+
+    <style name="AppTheme.Red.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryRedLight</item>
+        <item name="android:colorPrimaryDark">@color/statusRedLight</item>
+        <item name="android:colorAccent">@color/primaryRedLight</item>
+        <item name="android:windowBackground">@color/bgLight</item>
+        <item name="android:colorBackground">@color/bgLight</item>
+        <item name="android:statusBarColor">@color/statusRedLight</item>
+        <item name="android:navigationBarColor">@color/bgLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+
+        <item name="qzPrimary">@color/primaryRedLight</item>
+        <item name="qzBg">@color/bgLight</item>
+        <item name="qzSurface">@color/surfaceLight</item>
+        <item name="qzChipBg">@color/chipBgLight</item>
+        <item name="qzText">@color/textLight</item>
+        <item name="qzTextSub">@color/textSubLight</item>
+        <item name="qzDivider">@color/dividerLight</item>
+        <item name="qzGreen">@color/greenLight</item>
+        <item name="qzGreenBg">@color/greenBgLight</item>
+        <item name="qzRed">@color/redLight</item>
+        <item name="qzRedBg">@color/redBgLight</item>
+        <item name="qzOrange">@color/orangeLight</item>
+        <item name="qzOrangeBg">@color/orangeBgLight</item>
+        <item name="qzPrimaryBg">@color/primaryRedBgLight</item>
+        <item name="qzStroke">@color/strokeLight</item>
+        <item name="qzOnPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Red.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryRedDark</item>
+        <item name="android:colorPrimaryDark">@color/statusRedDark</item>
+        <item name="android:colorAccent">@color/primaryRedDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+        <item name="android:colorBackground">@color/bgDark</item>
+        <item name="android:statusBarColor">@color/statusRedDark</item>
+        <item name="android:navigationBarColor">@color/bgDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+
+        <item name="qzPrimary">@color/primaryRedDark</item>
+        <item name="qzBg">@color/bgDark</item>
+        <item name="qzSurface">@color/surfaceDark</item>
+        <item name="qzChipBg">@color/chipBgDark</item>
+        <item name="qzText">@color/textDark</item>
+        <item name="qzTextSub">@color/textSubDark</item>
+        <item name="qzDivider">@color/dividerDark</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryRedBgDark</item>
+        <item name="qzStroke">@color/strokeDark</item>
+        <item name="qzOnPrimary">#0E1116</item>
+    </style>
+
+    <style name="AppTheme.Green.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryGreenLight</item>
+        <item name="android:colorPrimaryDark">@color/statusGreenLight</item>
+        <item name="android:colorAccent">@color/primaryGreenLight</item>
+        <item name="android:windowBackground">@color/bgLight</item>
+        <item name="android:colorBackground">@color/bgLight</item>
+        <item name="android:statusBarColor">@color/statusGreenLight</item>
+        <item name="android:navigationBarColor">@color/bgLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+
+        <item name="qzPrimary">@color/primaryGreenLight</item>
+        <item name="qzBg">@color/bgLight</item>
+        <item name="qzSurface">@color/surfaceLight</item>
+        <item name="qzChipBg">@color/chipBgLight</item>
+        <item name="qzText">@color/textLight</item>
+        <item name="qzTextSub">@color/textSubLight</item>
+        <item name="qzDivider">@color/dividerLight</item>
+        <item name="qzGreen">@color/greenLight</item>
+        <item name="qzGreenBg">@color/greenBgLight</item>
+        <item name="qzRed">@color/redLight</item>
+        <item name="qzRedBg">@color/redBgLight</item>
+        <item name="qzOrange">@color/orangeLight</item>
+        <item name="qzOrangeBg">@color/orangeBgLight</item>
+        <item name="qzPrimaryBg">@color/primaryGreenBgLight</item>
+        <item name="qzStroke">@color/strokeLight</item>
+        <item name="qzOnPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Green.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryGreenDark</item>
+        <item name="android:colorPrimaryDark">@color/statusGreenDark</item>
+        <item name="android:colorAccent">@color/primaryGreenDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+        <item name="android:colorBackground">@color/bgDark</item>
+        <item name="android:statusBarColor">@color/statusGreenDark</item>
+        <item name="android:navigationBarColor">@color/bgDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+
+        <item name="qzPrimary">@color/primaryGreenDark</item>
+        <item name="qzBg">@color/bgDark</item>
+        <item name="qzSurface">@color/surfaceDark</item>
+        <item name="qzChipBg">@color/chipBgDark</item>
+        <item name="qzText">@color/textDark</item>
+        <item name="qzTextSub">@color/textSubDark</item>
+        <item name="qzDivider">@color/dividerDark</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryGreenBgDark</item>
+        <item name="qzStroke">@color/strokeDark</item>
+        <item name="qzOnPrimary">#0E1116</item>
+    </style>
+
+    <style name="AppTheme.Orange.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryOrangeLight</item>
+        <item name="android:colorPrimaryDark">@color/statusOrangeLight</item>
+        <item name="android:colorAccent">@color/primaryOrangeLight</item>
+        <item name="android:windowBackground">@color/bgLight</item>
+        <item name="android:colorBackground">@color/bgLight</item>
+        <item name="android:statusBarColor">@color/statusOrangeLight</item>
+        <item name="android:navigationBarColor">@color/bgLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+
+        <item name="qzPrimary">@color/primaryOrangeLight</item>
+        <item name="qzBg">@color/bgLight</item>
+        <item name="qzSurface">@color/surfaceLight</item>
+        <item name="qzChipBg">@color/chipBgLight</item>
+        <item name="qzText">@color/textLight</item>
+        <item name="qzTextSub">@color/textSubLight</item>
+        <item name="qzDivider">@color/dividerLight</item>
+        <item name="qzGreen">@color/greenLight</item>
+        <item name="qzGreenBg">@color/greenBgLight</item>
+        <item name="qzRed">@color/redLight</item>
+        <item name="qzRedBg">@color/redBgLight</item>
+        <item name="qzOrange">@color/orangeLight</item>
+        <item name="qzOrangeBg">@color/orangeBgLight</item>
+        <item name="qzPrimaryBg">@color/primaryOrangeBgLight</item>
+        <item name="qzStroke">@color/strokeLight</item>
+        <item name="qzOnPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Orange.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryOrangeDark</item>
+        <item name="android:colorPrimaryDark">@color/statusOrangeDark</item>
+        <item name="android:colorAccent">@color/primaryOrangeDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+        <item name="android:colorBackground">@color/bgDark</item>
+        <item name="android:statusBarColor">@color/statusOrangeDark</item>
+        <item name="android:navigationBarColor">@color/bgDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+
+        <item name="qzPrimary">@color/primaryOrangeDark</item>
+        <item name="qzBg">@color/bgDark</item>
+        <item name="qzSurface">@color/surfaceDark</item>
+        <item name="qzChipBg">@color/chipBgDark</item>
+        <item name="qzText">@color/textDark</item>
+        <item name="qzTextSub">@color/textSubDark</item>
+        <item name="qzDivider">@color/dividerDark</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryOrangeBgDark</item>
+        <item name="qzStroke">@color/strokeDark</item>
+        <item name="qzOnPrimary">#0E1116</item>
+    </style>
+
+    <style name="AppTheme.Purple.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryPurpleLight</item>
+        <item name="android:colorPrimaryDark">@color/statusPurpleLight</item>
+        <item name="android:colorAccent">@color/primaryPurpleLight</item>
+        <item name="android:windowBackground">@color/bgLight</item>
+        <item name="android:colorBackground">@color/bgLight</item>
+        <item name="android:statusBarColor">@color/statusPurpleLight</item>
+        <item name="android:navigationBarColor">@color/bgLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+
+        <item name="qzPrimary">@color/primaryPurpleLight</item>
+        <item name="qzBg">@color/bgLight</item>
+        <item name="qzSurface">@color/surfaceLight</item>
+        <item name="qzChipBg">@color/chipBgLight</item>
+        <item name="qzText">@color/textLight</item>
+        <item name="qzTextSub">@color/textSubLight</item>
+        <item name="qzDivider">@color/dividerLight</item>
+        <item name="qzGreen">@color/greenLight</item>
+        <item name="qzGreenBg">@color/greenBgLight</item>
+        <item name="qzRed">@color/redLight</item>
+        <item name="qzRedBg">@color/redBgLight</item>
+        <item name="qzOrange">@color/orangeLight</item>
+        <item name="qzOrangeBg">@color/orangeBgLight</item>
+        <item name="qzPrimaryBg">@color/primaryPurpleBgLight</item>
+        <item name="qzStroke">@color/strokeLight</item>
+        <item name="qzOnPrimary">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Purple.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryPurpleDark</item>
+        <item name="android:colorPrimaryDark">@color/statusPurpleDark</item>
+        <item name="android:colorAccent">@color/primaryPurpleDark</item>
+        <item name="android:windowBackground">@color/bgDark</item>
+        <item name="android:colorBackground">@color/bgDark</item>
+        <item name="android:statusBarColor">@color/statusPurpleDark</item>
+        <item name="android:navigationBarColor">@color/bgDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+
+        <item name="qzPrimary">@color/primaryPurpleDark</item>
+        <item name="qzBg">@color/bgDark</item>
+        <item name="qzSurface">@color/surfaceDark</item>
+        <item name="qzChipBg">@color/chipBgDark</item>
+        <item name="qzText">@color/textDark</item>
+        <item name="qzTextSub">@color/textSubDark</item>
+        <item name="qzDivider">@color/dividerDark</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryPurpleBgDark</item>
+        <item name="qzStroke">@color/strokeDark</item>
+        <item name="qzOnPrimary">#0E1116</item>
+    </style>
+
+    <!-- ================= 纯黑（AMOLED）主题：5 配色 × 纯黑 ================= -->
+
+    <style name="AppTheme.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryDark</item>
+        <item name="android:colorPrimaryDark">@color/statusBarDark</item>
+        <item name="android:colorAccent">@color/primaryDark</item>
+        <item name="android:windowBackground">@color/blackBg</item>
+        <item name="android:colorBackground">@color/blackBg</item>
+        <item name="android:statusBarColor">@color/statusBarDark</item>
+        <item name="android:navigationBarColor">@color/blackBg</item>
+        <item name="android:textColorPrimary">@color/blackText</item>
+        <item name="android:textColorSecondary">@color/blackTextSub</item>
+
+        <item name="qzPrimary">@color/primaryDark</item>
+        <item name="qzBg">@color/blackBg</item>
+        <item name="qzSurface">@color/blackSurface</item>
+        <item name="qzChipBg">@color/blackChipBg</item>
+        <item name="qzText">@color/blackText</item>
+        <item name="qzTextSub">@color/blackTextSub</item>
+        <item name="qzDivider">@color/blackDivider</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryBgDark</item>
+        <item name="qzStroke">@color/blackStroke</item>
+        <item name="qzOnPrimary">#0A0A0A</item>
+    </style>
+
+    <style name="AppTheme.Red.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryRedDark</item>
+        <item name="android:colorPrimaryDark">@color/statusRedDark</item>
+        <item name="android:colorAccent">@color/primaryRedDark</item>
+        <item name="android:windowBackground">@color/blackBg</item>
+        <item name="android:colorBackground">@color/blackBg</item>
+        <item name="android:statusBarColor">@color/statusRedDark</item>
+        <item name="android:navigationBarColor">@color/blackBg</item>
+        <item name="android:textColorPrimary">@color/blackText</item>
+        <item name="android:textColorSecondary">@color/blackTextSub</item>
+
+        <item name="qzPrimary">@color/primaryRedDark</item>
+        <item name="qzBg">@color/blackBg</item>
+        <item name="qzSurface">@color/blackSurface</item>
+        <item name="qzChipBg">@color/blackChipBg</item>
+        <item name="qzText">@color/blackText</item>
+        <item name="qzTextSub">@color/blackTextSub</item>
+        <item name="qzDivider">@color/blackDivider</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryRedBgDark</item>
+        <item name="qzStroke">@color/blackStroke</item>
+        <item name="qzOnPrimary">#0A0A0A</item>
+    </style>
+
+    <style name="AppTheme.Green.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryGreenDark</item>
+        <item name="android:colorPrimaryDark">@color/statusGreenDark</item>
+        <item name="android:colorAccent">@color/primaryGreenDark</item>
+        <item name="android:windowBackground">@color/blackBg</item>
+        <item name="android:colorBackground">@color/blackBg</item>
+        <item name="android:statusBarColor">@color/statusGreenDark</item>
+        <item name="android:navigationBarColor">@color/blackBg</item>
+        <item name="android:textColorPrimary">@color/blackText</item>
+        <item name="android:textColorSecondary">@color/blackTextSub</item>
+
+        <item name="qzPrimary">@color/primaryGreenDark</item>
+        <item name="qzBg">@color/blackBg</item>
+        <item name="qzSurface">@color/blackSurface</item>
+        <item name="qzChipBg">@color/blackChipBg</item>
+        <item name="qzText">@color/blackText</item>
+        <item name="qzTextSub">@color/blackTextSub</item>
+        <item name="qzDivider">@color/blackDivider</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryGreenBgDark</item>
+        <item name="qzStroke">@color/blackStroke</item>
+        <item name="qzOnPrimary">#0A0A0A</item>
+    </style>
+
+    <style name="AppTheme.Orange.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryOrangeDark</item>
+        <item name="android:colorPrimaryDark">@color/statusOrangeDark</item>
+        <item name="android:colorAccent">@color/primaryOrangeDark</item>
+        <item name="android:windowBackground">@color/blackBg</item>
+        <item name="android:colorBackground">@color/blackBg</item>
+        <item name="android:statusBarColor">@color/statusOrangeDark</item>
+        <item name="android:navigationBarColor">@color/blackBg</item>
+        <item name="android:textColorPrimary">@color/blackText</item>
+        <item name="android:textColorSecondary">@color/blackTextSub</item>
+
+        <item name="qzPrimary">@color/primaryOrangeDark</item>
+        <item name="qzBg">@color/blackBg</item>
+        <item name="qzSurface">@color/blackSurface</item>
+        <item name="qzChipBg">@color/blackChipBg</item>
+        <item name="qzText">@color/blackText</item>
+        <item name="qzTextSub">@color/blackTextSub</item>
+        <item name="qzDivider">@color/blackDivider</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryOrangeBgDark</item>
+        <item name="qzStroke">@color/blackStroke</item>
+        <item name="qzOnPrimary">#0A0A0A</item>
+    </style>
+
+    <style name="AppTheme.Purple.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/primaryPurpleDark</item>
+        <item name="android:colorPrimaryDark">@color/statusPurpleDark</item>
+        <item name="android:colorAccent">@color/primaryPurpleDark</item>
+        <item name="android:windowBackground">@color/blackBg</item>
+        <item name="android:colorBackground">@color/blackBg</item>
+        <item name="android:statusBarColor">@color/statusPurpleDark</item>
+        <item name="android:navigationBarColor">@color/blackBg</item>
+        <item name="android:textColorPrimary">@color/blackText</item>
+        <item name="android:textColorSecondary">@color/blackTextSub</item>
+
+        <item name="qzPrimary">@color/primaryPurpleDark</item>
+        <item name="qzBg">@color/blackBg</item>
+        <item name="qzSurface">@color/blackSurface</item>
+        <item name="qzChipBg">@color/blackChipBg</item>
+        <item name="qzText">@color/blackText</item>
+        <item name="qzTextSub">@color/blackTextSub</item>
+        <item name="qzDivider">@color/blackDivider</item>
+        <item name="qzGreen">@color/greenDark</item>
+        <item name="qzGreenBg">@color/greenBgDark</item>
+        <item name="qzRed">@color/redDark</item>
+        <item name="qzRedBg">@color/redBgDark</item>
+        <item name="qzOrange">@color/orangeDark</item>
+        <item name="qzOrangeBg">@color/orangeBgDark</item>
+        <item name="qzPrimaryBg">@color/primaryPurpleBgDark</item>
+        <item name="qzStroke">@color/blackStroke</item>
+        <item name="qzOnPrimary">#0A0A0A</item>
+    </style>
+
+</resources>

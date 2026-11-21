@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主色浅底小胶囊（通用；如「全部题量填满」按钮） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/qzPrimaryBg" />
+    <corners android:radius="13dp" />
+</shape>

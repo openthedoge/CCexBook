@@ -1,0 +1,23 @@
+# 签名密钥 (绝对禁止上传)
+*.jks
+*.keystore
+
+# 本地配置 (包含 SDK 路径和签名密码，绝对禁止上传)
+local.properties
+
+# 编译产物和缓存
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild
+.cxx
+
+# IDE 配置文件
+.idea/
+*.iml
+.DS_Store
+
+# 安装包
+*.apk
+*.aab
