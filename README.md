@@ -1,3 +1,4 @@
+**简体中文** | [English](./README_EN.md)
 # CC练习本（CCexbook）
 
 一个**纯离线、零权限**的 Android 刷题 App：支持导入 Excel / Word / 文本题库，顺序刷题、错题本、模拟考试、标记与笔记、数据备份，并可为每道题写笔记。

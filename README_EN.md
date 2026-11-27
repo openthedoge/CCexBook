@@ -1,3 +1,4 @@
+[简体中文](./README.md) | **English**
 # CCexbook
 
 An **offline, zero-permission** Android quiz app: import question banks from Excel / Word / plain text, practise sequentially, keep a wrong-answer book, take mock exams, tag and annotate questions, and back everything up locally.
