@@ -28,28 +28,6 @@ public class StatsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
-
-        findViewById(R.id.btnClear).setOnClickListener(v ->
-                ConfirmDialog.show(this, "清空练习记录", "将清空全部答题记录与顺序进度，错题本、收藏与题库不受影响。确定？",
-                        () -> {
-                            Db.clearRecords();
-                            refresh();
-                            Ui.toast(this, "已清空练习记录");
-                        }));
-        findViewById(R.id.btnClearWrong).setOnClickListener(v ->
-                ConfirmDialog.show(this, "清空错题本", "将清空全部错题记录，确定？",
-                        () -> {
-                            Db.clearWrongs();
-                            refresh();
-                            Ui.toast(this, "已清空错题本");
-                        }));
-        findViewById(R.id.btnClearFav).setOnClickListener(v ->
-                ConfirmDialog.show(this, "清空收藏", "将清空全部收藏题目，确定？",
-                        () -> {
-                            Db.clearFavs();
-                            refresh();
-                            Ui.toast(this, "已清空收藏");
-                        }));
     }
 
     @Override

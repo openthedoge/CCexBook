@@ -86,6 +86,7 @@ public abstract class BaseActivity extends Activity {
         int color = Prefs.themeColor();
         int mode = themeModeKey();
         int[] themes = mode == 2 ? THEME_BLACK : (mode == 1 ? THEME_DARK : THEME_LIGHT);
+        if (mode == 2) color = 0;   // 纯黑统一灰阶，忽略配色
         setTheme(themes[color]);
     }
 

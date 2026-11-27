@@ -60,6 +60,7 @@ public class BankHomeActivity extends BaseActivity {
         progress = findViewById(R.id.progress);
         typeChips = findViewById(R.id.typeChips);
         grid = findViewById(R.id.grid);
+        grid.setColumnCount(2);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnMore).setOnClickListener(v -> showMenu());
@@ -87,6 +88,8 @@ public class BankHomeActivity extends BaseActivity {
             }
         }
         title.setText(bankName());
+        boolean focus = com.ziruoling.quiz.data.Prefs.focusMode();
+        statLine.setVisibility(focus ? android.view.View.GONE : android.view.View.VISIBLE);
         statLine.setText(String.format(Locale.CHINA, "共 %d 题 · 已做 %d · 正确率 %d%%",
                 total, done, accuracy()));
         typeLine.setText(typeSummary(types));
@@ -122,43 +125,62 @@ public class BankHomeActivity extends BaseActivity {
     }
 
     private void showMenu() {
-        PopupMenu pm = new PopupMenu(this, findViewById(R.id.btnMore));
-        pm.getMenu().add("重命名");
-        pm.getMenu().add("重置顺序进度");
-        pm.getMenu().add("导出题库…");
-        pm.getMenu().add("删除题库");
-        pm.setOnMenuItemClickListener(item -> {
-            switch (item.getTitle().toString()) {
-                case "重命名":
-                    InputDialog.show(this, "重命名题库", title.getText().toString(), "题库名称", name -> {
-                        if (!name.isEmpty()) {
-                            Db.renameBank(bankId, name);
-                            title.setText(name);
-                        }
-                    });
-                    return true;
-                case "重置顺序进度":
-                    ConfirmDialog.show(this, "重置顺序进度", "将顺序练习从第一题重新开始，确定？", () -> {
-                        Db.resetProgress(bankId);
-                        Ui.toast(this, "已重置");
-                        refresh();
-                    });
-                    return true;
-                case "导出题库…":
-                    showExportMenu();
-                    return true;
-                case "删除题库":
-                    ConfirmDialog.showDanger(this, "删除题库",
-                            "将删除该题库及其全部题目、记录，此操作不可恢复。确定删除？",
+        final String[] items = {"重命名", "追加题目", "重置题库…"};
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setItems(items, (d, which) -> {
+                    switch (which) {
+                        case 0:
+                            InputDialog.show(this, "重命名题库", title.getText().toString(),
+                                    "题库名称", name -> {
+                                        if (!name.isEmpty()) {
+                                            Db.renameBank(bankId, name);
+                                            title.setText(name);
+                                        }
+                                    });
+                            break;
+                        case 1:
+                            AppendQuestionsActivity.start(this, bankId, title.getText().toString());
+                            break;
+                        case 2:
+                            showResetDialog();
+                            break;
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 重置题库：多选要清空的内容，再二次确认 */
+    private void showResetDialog() {
+        final String[] items = {"做题记录（含顺序进度）", "错题本", "标记", "收藏"};
+        final boolean[] sel = new boolean[items.length];
+        final android.app.AlertDialog dlg = new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("重置题库")
+                .setMultiChoiceItems(items, sel, (d, w, isChecked) -> sel[w] = isChecked)
+                .setPositiveButton("下一步", (d, w) -> {
+                    if (!sel[0] && !sel[1] && !sel[2] && !sel[3]) {
+                        Ui.toast(this, "请至少选择一项");
+                        return;
+                    }
+                    ConfirmDialog.showDanger(this, "确认重置题库",
+                            "将清空所选内容，总统计不受影响；此操作不可恢复。",
                             () -> {
-                                Db.deleteBank(bankId);
-                                finish();
+                                Db.resetBank(bankId, sel[0], sel[1], sel[2], sel[3]);
+                                refresh();
+                                Ui.toast(this, "已重置");
                             });
-                    return true;
-            }
-            return false;
-        });
-        pm.show();
+                })
+                .setNeutralButton("全选", null)
+                .setNegativeButton("取消", null)
+                .create();
+        dlg.setOnShowListener(x -> dlg.getButton(android.app.AlertDialog.BUTTON_NEUTRAL)
+                .setOnClickListener(v -> {
+                    for (int i = 0; i < items.length; i++) {
+                        sel[i] = true;
+                        dlg.getListView().setItemChecked(i, true);
+                    }
+                }));
+        dlg.show();
     }
 
     private String bankName() {
@@ -195,7 +217,8 @@ public class BankHomeActivity extends BaseActivity {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        intent.putExtra(Intent.EXTRA_TITLE, title.getText().toString() + ".xlsx");
+        intent.putExtra(Intent.EXTRA_TITLE,
+                BankExportHelper.safeFileName(title.getText().toString(), ".xlsx"));
         startActivityForResult(intent, REQ_EXPORT);
     }
 
@@ -204,7 +227,8 @@ public class BankHomeActivity extends BaseActivity {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        intent.putExtra(Intent.EXTRA_TITLE, title.getText().toString() + ".docx");
+        intent.putExtra(Intent.EXTRA_TITLE,
+                BankExportHelper.safeFileName(title.getText().toString(), ".docx"));
         startActivityForResult(intent, REQ_EXPORT_DOCX);
     }
 
@@ -255,6 +279,68 @@ public class BankHomeActivity extends BaseActivity {
         }, "docx-export").start();
     }
 
+    /** 专项：选择题型/分类，生成会话并开始 */
+    private android.widget.TextView specialButton(String text) {
+        android.widget.TextView t = new android.widget.TextView(this);
+        t.setText(text);
+        t.setTextSize(14);
+        t.setTextColor(Ui.attrColor(this, R.attr.qzPrimary));
+        t.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 8));
+        return t;
+    }
+
+    private void pickSpecial() {
+        TypeFilterDialog.show(this, bankId, (mask, category, random) -> {
+            java.util.List<Long> ids = Db.questionIdsByFilter(bankId, mask, category, random);
+            if (ids.isEmpty()) {
+                Ui.toast(this, "该组合下没有题目");
+                return;
+            }
+            Db.saveSpecial(bankId, ids);
+            launchSpecial(ids, 0);
+        });
+    }
+
+    /** 专项：继续上次会话，从第一道未做的题开始 */
+    private void resumeSpecial() {
+        java.util.List<Long> ids = Db.specialIds(bankId);
+        if (ids.isEmpty()) {
+            pickSpecial();
+            return;
+        }
+        java.util.Map<Long, Boolean> done = Db.specialDone(bankId);
+        // 「全做完」按会话题号逐题判定：ids 里每一题都在 done 中才算完成，
+        // 不再用 specialStats 的 done >= total 计数（题库增删题后口径可能不一致）。
+        boolean allDone = true;
+        for (long id : ids) {
+            if (!done.containsKey(id)) {
+                allDone = false;
+                break;
+            }
+        }
+        if (allDone) {
+            // 上次其实已全部做完（异常退出留下的残局），直接清掉重选
+            Db.specialDelete(bankId);
+            Ui.toast(this, "上次训练已完成，请重新选择");
+            pickSpecial();
+            return;
+        }
+        int start = 0;
+        for (int i = 0; i < ids.size(); i++) {
+            if (!done.containsKey(ids.get(i))) {
+                start = i;
+                break;
+            }
+        }
+        launchSpecial(ids, start);
+    }
+
+    private void launchSpecial(java.util.List<Long> ids, int start) {
+        PracticeActivity.setPendingSpecial();
+        PracticeActivity.startPractice(this, bankId, ids, start,
+                PracticeActivity.MODE_PRACTICE, "专项练习", false);
+    }
+
     private void buildGrid() {
         grid.removeAllViews();
         // 「继续刷题」：直接按上次进度续上，不再走「顺序练习」的二级选择
@@ -294,30 +380,55 @@ public class BankHomeActivity extends BaseActivity {
             PracticeActivity.startPractice(this, bankId, ids, 0,
                     PracticeActivity.MODE_PRACTICE, "随机刷题", false);
         });
-        addItem("背题模式", "看题回忆，乱序防记序", () -> {
+        addItem("背题模式", "答案直接显示 · 独立进度", () -> {
             List<Long> ids = Db.questionIds(bankId);
             if (ids.isEmpty()) {
                 Ui.toast(this, "题库为空");
                 return;
             }
-            // 固定种子乱序：同一题库每次顺序相同（续看位置有效），且避免顺序记忆
-            long[] arr = new long[ids.size()];
-            for (int i = 0; i < arr.length; i++) arr[i] = ids.get(i);
-            PracticeActivity.reciteShuffle(arr, bankId);
-            List<Long> shuffled = new ArrayList<>(arr.length);
-            for (long id : arr) shuffled.add(id);
-            startWithChoice("背题模式", PracticeActivity.MODE_RECITE, shuffled, "看到");
+            showReciteStart(ids);
         });
-        addItem("专项练习", "按题型/分类筛选", () ->
-                TypeFilterDialog.show(this, bankId, (mask, category, random) -> {
-                    List<Long> ids = Db.questionIdsByFilter(bankId, mask, category, random);
-                    if (ids.isEmpty()) {
-                        Ui.toast(this, "该组合下没有题目");
-                        return;
-                    }
-                    PracticeActivity.startPractice(this, bankId, ids, 0,
-                            PracticeActivity.MODE_PRACTICE, "专项练习", false, true);
-                }));
+        addItem("专项练习", "按题型/分类筛选", () -> {
+            if (Db.hasSpecial(bankId)) {
+                android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+                box.setOrientation(android.widget.LinearLayout.VERTICAL);
+                android.widget.LinearLayout row = new android.widget.LinearLayout(this);
+                row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                row.setPadding(Ui.dp(this, 20), Ui.dp(this, 8), Ui.dp(this, 20), 0);
+                final android.app.AlertDialog dlg = new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                        .setTitle("是否继续上次训练？")
+                        .setView(box)
+                        .create();
+                android.widget.TextView yes = specialButton("是");
+                yes.setOnClickListener(v -> { dlg.dismiss(); resumeSpecial(); });
+                android.widget.TextView re = specialButton("重选");
+                re.setOnClickListener(v -> {
+                    dlg.dismiss();
+                    Db.specialDelete(bankId);
+                    pickSpecial();
+                });
+                android.widget.TextView cancel = specialButton("取消");
+                cancel.setOnClickListener(v -> dlg.dismiss());
+                row.addView(yes);
+                final android.view.View gap = new android.view.View(this);
+                final android.widget.LinearLayout.LayoutParams gapLp =
+                        new android.widget.LinearLayout.LayoutParams(0, 1);
+                row.addView(gap, gapLp);
+                row.addView(re);
+                row.post(() -> {
+                    gapLp.width = re.getWidth();
+                    gap.setLayoutParams(gapLp);
+                });
+                android.view.View spacer = new android.view.View(this);
+                row.addView(spacer, new android.widget.LinearLayout.LayoutParams(0, 1, 1f));
+                row.addView(cancel);
+                box.addView(row);
+                dlg.show();
+                Ui.styleContent(dlg, this, false);
+            } else {
+                pickSpecial();
+            }
+        });
         addItem("浏览全部题目", "列表 + 搜索", () ->
                 QuestionListActivity.start(this, bankId, QuestionListActivity.SCOPE_ALL,
                         QuestionListActivity.FILTER_ALL, "全部题目"));
@@ -333,9 +444,7 @@ public class BankHomeActivity extends BaseActivity {
         addItem("标记", "按词条查看标记题目", () ->
                 QuestionListActivity.start(this, bankId, QuestionListActivity.SCOPE_FLAGGED,
                         QuestionListActivity.FILTER_ALL, "标记"));
-        addItem("考试记录", "历史成绩", () ->
-                startActivity(new Intent(this, StatsActivity.class)));
-        addItem("导出试卷", "随机/按题型抽题出 Word 卷", () ->
+        addItem("导出试卷", "抽题导出Word卷", () ->
                 ExportExamActivity.start(this, bankId));
         addItem("导出题库", "表格或文档（含图片）", this::showExportMenu);
     }
@@ -344,13 +453,119 @@ public class BankHomeActivity extends BaseActivity {
      * 顺序练习 / 背题模式：开始方式列表——从上次继续 / 重新开始 / 自定义起始题号。
      * 自定义题号只收数字，超出范围时自动夹到第 1 题或最后一题。
      */
+    /** 背题开始方式：居中弹窗（继续上次 / 重新开始 / 开始背题 + 是否随机） */
+    private void showReciteStart(final List<Long> all) {
+        final int n = all.size();
+        final long lastQid = Db.getReciteProgress(bankId);
+        final boolean hasRecord = lastQid > 0 && all.contains(lastQid);
+        final java.util.Set<Long> seen = Db.reciteSeenIds(bankId);
+
+        int unseen = 0;
+        for (long id : all) if (!seen.contains(id)) unseen++;
+        if (unseen <= 0) {
+            promptReciteDone(all, false);
+            return;
+        }
+
+        final LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(Ui.dp(this, 20), Ui.dp(this, 4), Ui.dp(this, 20), 0);
+
+        final android.widget.CheckBox cb = new android.widget.CheckBox(this);
+        cb.setText("是否随机");
+        cb.setTextSize(15);
+        cb.setTextColor(Ui.attrColor(this, R.attr.qzText));
+        cb.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 2));
+
+        final android.app.AlertDialog dlg = new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("背题模式（共 " + n + " 题，未看 " + unseen + "）")
+                .setView(box)
+                .setNegativeButton("取消", null)
+                .create();
+
+        if (hasRecord) {
+            int idx = all.indexOf(lastQid) + 1;
+            box.addView(reciteRow("继续上次背题（上次第 " + idx + " 题）", v -> {
+                dlg.dismiss();
+                startRecite(all, seen, lastQid, cb.isChecked(), true);
+            }));
+            box.addView(reciteRow("重新开始", v -> {
+                dlg.dismiss();
+                startRecite(all, seen, 0, cb.isChecked(), false);
+            }));
+        } else {
+            box.addView(reciteRow("开始背题", v -> {
+                dlg.dismiss();
+                startRecite(all, seen, 0, cb.isChecked(), false);
+            }));
+        }
+        box.addView(cb);
+        dlg.show();
+        com.ziruoling.quiz.util.Ui.styleContent(dlg, this, false);
+    }
+
+    /** 序列剔除已看；继续上次时把我们放到「上次那题」，其余按随机/顺序接在后面 */
+    private void startRecite(List<Long> all, java.util.Set<Long> seen, long lastQid,
+                             boolean random, boolean continueLast) {
+        List<Long> seq = new ArrayList<>();
+        if (continueLast && lastQid > 0 && all.contains(lastQid)) {
+            seq.add(lastQid);
+            List<Long> rest = new ArrayList<>();
+            for (long id : all) if (id != lastQid && !seen.contains(id)) rest.add(id);
+            if (random) shuffleIds(rest);
+            seq.addAll(rest);
+        } else {
+            for (long id : all) if (!seen.contains(id)) seq.add(id);
+            if (random) {
+                shuffleIds(seq);
+                // 打乱后再随机挑一题作为本轮起点（其余按打乱顺序接在后面）
+                if (seq.size() > 1) {
+                    int off = new java.util.Random(System.nanoTime()).nextInt(seq.size());
+                    java.util.Collections.rotate(seq, -off);
+                }
+            }
+        }
+        PracticeActivity.setReciteRandom(random);
+        PracticeActivity.startPractice(this, bankId, seq, 0,
+                PracticeActivity.MODE_RECITE, "背题模式", true, true);
+    }
+
+    private TextView reciteRow(String text, android.view.View.OnClickListener l) {
+        TextView t = Ui.text(this, text, 15, R.attr.qzText, 0);
+        t.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 12));
+        t.setOnClickListener(l);
+        return t;
+    }
+
+    private void shuffleIds(List<Long> list) {
+        long[] arr = new long[list.size()];
+        for (int i = 0; i < arr.length; i++) arr[i] = list.get(i);
+        PracticeActivity.reciteShuffleSeedless(arr);
+        list.clear();
+        for (long id : arr) list.add(id);
+    }
+
+    /** 全部浏览完：是否按当前模式重新开始 */
+    private void promptReciteDone(List<Long> all, boolean random) {
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("提示")
+                .setMessage("所有题已经浏览完\n是否按当前模式重新开始？")
+                .setPositiveButton("是", (d, w) -> {
+                    Db.resetRecite(bankId);
+                    startRecite(all, new java.util.HashSet<>(), 0, random, false);
+                })
+                .setNegativeButton("否", null)
+                .show();
+    }
+
     private void startWithChoice(String title, int mode, List<Long> ids, String verb) {
         if (ids == null || ids.isEmpty()) {
             Ui.toast(this, "题库为空");
             return;
         }
         int n = ids.size();
-        long lastQid = Db.getProgress(bankId);
+        long lastQid = mode == PracticeActivity.MODE_RECITE
+                ? Db.getReciteProgress(bankId) : Db.getProgress(bankId);
         int lastIdx = lastQid > 0 ? ids.indexOf(lastQid) : -1;
 
         final List<String> labels = new ArrayList<>();
@@ -415,10 +630,11 @@ public class BankHomeActivity extends BaseActivity {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         s.setPadding(0, Ui.dp(this, 2), 0, 0);
         card.setOnClickListener(v -> action.run());
-        grid.addView(card, new GridLayout.LayoutParams(
+        GridLayout.LayoutParams lp = new GridLayout.LayoutParams(
                 GridLayout.spec(GridLayout.UNDEFINED, 1f),
-                GridLayout.spec(GridLayout.UNDEFINED, 1f)));
-        ((GridLayout.LayoutParams) card.getLayoutParams()).setMargins(
-                Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4));
+                GridLayout.spec(GridLayout.UNDEFINED, 1f));
+        lp.width = 0;   // 交给 weight 均分，两列才会左右对齐
+        lp.setMargins(Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4));
+        grid.addView(card, lp);
     }
 }

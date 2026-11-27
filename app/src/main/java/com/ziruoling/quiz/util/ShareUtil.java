@@ -137,7 +137,9 @@ public final class ShareUtil {
     private static String answerDisplay(Question q, List<String> opts, String answer) {
         if (answer == null || answer.isEmpty()) return "（未提供）";
         if (q.type == QuestionType.JUDGE) {
-            return AnswerUtil.judgeText(AnswerUtil.normalizeJudge(answer));
+            // 能识别成正/误就显示「正确/错误」，识别不了（脏数据）就原样显示，
+            // 不能一律回落到 judgeText（空串会被误显示成「错误」）。
+            return AnswerUtil.answerDisplay(QuestionType.JUDGE, answer);
         }
         if (q.type == QuestionType.FILL || q.type == QuestionType.SHORT || q.type == QuestionType.OTHER) {
             return q.answer == null || q.answer.isEmpty() ? "（未提供）" : q.answer;

@@ -76,7 +76,7 @@ public final class Db {
 
     private static class OpenHelper extends SQLiteOpenHelper {
         OpenHelper(Context c) {
-            super(c, "ziruoling_quiz.db", null, 7);
+            super(c, "ziruoling_quiz.db", null, 13);
         }
 
         @Override
@@ -86,7 +86,26 @@ public final class Db {
                     + "name TEXT NOT NULL,"
                     + "source TEXT DEFAULT '',"
                     + "created_at INTEGER,"
-                    + "last_at INTEGER DEFAULT 0)");
+                    + "last_at INTEGER DEFAULT 0,"
+                    + "folder_id INTEGER DEFAULT 0,"
+                    + "pinned INTEGER DEFAULT 0,"
+                    + "sort_pos INTEGER DEFAULT 0)");
+            d.execSQL("CREATE TABLE IF NOT EXISTS recite_seen(bank_id INTEGER, qid INTEGER,"
+                    + " PRIMARY KEY(bank_id, qid))");
+            d.execSQL("CREATE TABLE IF NOT EXISTS recite_progress(bank_id INTEGER PRIMARY KEY,"
+                    + " last_qid INTEGER, updated_at INTEGER)");
+            d.execSQL("CREATE TABLE IF NOT EXISTS special_session("
+                    + "bank_id INTEGER, qid INTEGER, pos INTEGER,"
+                    + " done INTEGER DEFAULT 0, correct INTEGER DEFAULT 0,"
+                    + " PRIMARY KEY(bank_id, qid))");
+            d.execSQL("CREATE TABLE IF NOT EXISTS folders("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + "name TEXT NOT NULL,"
+                    + "pinned INTEGER DEFAULT 0,"
+                    + "sort_pos INTEGER DEFAULT 0,"
+                    + "sort_field INTEGER DEFAULT 0,"
+                    + "sort_dir INTEGER DEFAULT 0,"
+                    + "created_at INTEGER)");
             d.execSQL("CREATE TABLE questions("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + "bank_id INTEGER NOT NULL,"
@@ -99,6 +118,9 @@ public final class Db {
                     + "category TEXT DEFAULT '',"
                     + "flagged INTEGER DEFAULT 0,"
                     + "img_paths TEXT DEFAULT '[]',"
+                    + "image_only INTEGER DEFAULT 0,"
+                    + "draft INTEGER DEFAULT 0,"
+                    + "note TEXT DEFAULT '',"
                     + "doc_no INTEGER DEFAULT 0)");
             d.execSQL("CREATE INDEX idx_q_bank ON questions(bank_id, qindex)");
             d.execSQL("CREATE TABLE records("
@@ -259,6 +281,61 @@ public final class Db {
                 // v5：多词条标记（旧 flagged=1 → 「疑错」词条）
                 migrateTags(d);
             }
+            if (oldVersion < 13) {
+                try {
+                    d.execSQL("ALTER TABLE questions ADD COLUMN note TEXT DEFAULT ''");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 12) {
+                try {
+                    d.execSQL("CREATE TABLE IF NOT EXISTS special_session("
+                            + "bank_id INTEGER, qid INTEGER, pos INTEGER,"
+                            + " done INTEGER DEFAULT 0, correct INTEGER DEFAULT 0,"
+                            + " PRIMARY KEY(bank_id, qid))");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 11) {
+                try {
+                    d.execSQL("ALTER TABLE questions ADD COLUMN draft INTEGER DEFAULT 0");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 10) {
+                try {
+                    d.execSQL("ALTER TABLE questions ADD COLUMN image_only INTEGER DEFAULT 0");
+                } catch (Exception ignored) {
+                }
+            }
+            if (oldVersion < 9) {
+                try {
+                    d.execSQL("ALTER TABLE banks ADD COLUMN folder_id INTEGER DEFAULT 0");
+                } catch (Exception ignored) {
+                }
+                try {
+                    d.execSQL("ALTER TABLE banks ADD COLUMN pinned INTEGER DEFAULT 0");
+                } catch (Exception ignored) {
+                }
+                try {
+                    d.execSQL("ALTER TABLE banks ADD COLUMN sort_pos INTEGER DEFAULT 0");
+                } catch (Exception ignored) {
+                }
+                d.execSQL("CREATE TABLE IF NOT EXISTS folders("
+                        + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        + "name TEXT NOT NULL,"
+                        + "pinned INTEGER DEFAULT 0,"
+                        + "sort_pos INTEGER DEFAULT 0,"
+                        + "sort_field INTEGER DEFAULT 0,"
+                        + "sort_dir INTEGER DEFAULT 0,"
+                        + "created_at INTEGER)");
+            }
+            if (oldVersion < 8) {
+                d.execSQL("CREATE TABLE IF NOT EXISTS recite_seen(bank_id INTEGER, qid INTEGER,"
+                        + " PRIMARY KEY(bank_id, qid))");
+                d.execSQL("CREATE TABLE IF NOT EXISTS recite_progress(bank_id INTEGER PRIMARY KEY,"
+                        + " last_qid INTEGER, updated_at INTEGER)");
+            }
             if (oldVersion < 7) {
                 // v7：题目笔记（独立于题干/解析，随题保存）
                 try {
@@ -286,6 +363,7 @@ public final class Db {
     public static List<Bank> listBanks() {
         List<Bank> out = new ArrayList<>();
         Cursor c = db().rawQuery("SELECT b.id, b.name, b.source, b.created_at, b.last_at,"
+                + " COALESCE(b.folder_id,0), COALESCE(b.pinned,0), COALESCE(b.sort_pos,0),"
                 + " COALESCE(q.qc,0), COALESCE(r.done,0), COALESCE(r.corr,0), COALESCE(r.recs,0)"
                 + " FROM banks b"
                 + " LEFT JOIN (SELECT bank_id, COUNT(*) qc FROM questions GROUP BY bank_id) q"
@@ -293,7 +371,7 @@ public final class Db {
                 + " LEFT JOIN (SELECT bank_id, COUNT(DISTINCT question_id) done,"
                 + "   SUM(correct) corr, COUNT(*) recs FROM records GROUP BY bank_id) r"
                 + "   ON r.bank_id = b.id"
-                + " ORDER BY b.last_at DESC, b.id DESC", null);
+                + " ORDER BY COALESCE(b.pinned,0) DESC, b.last_at DESC, b.id DESC", null);
         while (c.moveToNext()) {
             Bank b = new Bank();
             b.id = c.getLong(0);
@@ -301,13 +379,125 @@ public final class Db {
             b.source = c.getString(2);
             b.createdAt = c.getLong(3);
             b.lastAt = c.getLong(4);
-            b.questionCount = c.getInt(5);
-            b.doneCount = c.getInt(6);
-            b.correctCount = c.getInt(7);
-            b.recordCount = c.getInt(8);
+            b.folderId = c.getLong(5);
+            b.pinned = c.getInt(6);
+            b.sortPos = c.getInt(7);
+            b.questionCount = c.getInt(8);
+            b.doneCount = c.getInt(9);
+            b.correctCount = c.getInt(10);
+            b.recordCount = c.getInt(11);
             out.add(b);
         }
         c.close();
+        return out;
+    }
+
+    // ==================== 文件夹（一层） ====================
+
+    public static long createFolder(String name) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("name", name);
+        v.put("created_at", System.currentTimeMillis());
+        v.put("sort_pos", 0);
+        return db().insert("folders", null, v);
+    }
+
+    public static void renameFolder(long id, String name) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("name", name);
+        db().update("folders", v, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    /** 删除文件夹：内部题库回到「无文件夹」 */
+    public static void deleteFolder(long id) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("folder_id", 0);
+        v.put("pinned", 0);
+        db().update("banks", v, "folder_id=?", new String[]{String.valueOf(id)});
+        db().delete("folders", "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public static java.util.List<Folder> listFolders() {
+        java.util.List<Folder> out = new java.util.ArrayList<>();
+        Cursor c = db().rawQuery("SELECT id, name, COALESCE(pinned,0), COALESCE(sort_pos,0),"
+                + " COALESCE(sort_field,0), COALESCE(sort_dir,0), COALESCE(created_at,0)"
+                + " FROM folders ORDER BY COALESCE(pinned,0) DESC, COALESCE(sort_pos,0) ASC, id ASC", null);
+        while (c.moveToNext()) {
+            Folder f = new Folder();
+            f.id = c.getLong(0);
+            f.name = c.getString(1);
+            f.pinned = c.getInt(2);
+            f.sortPos = c.getInt(3);
+            f.sortField = c.getInt(4);
+            f.sortDir = c.getInt(5);
+            f.createdAt = c.getLong(6);
+            out.add(f);
+        }
+        c.close();
+        return out;
+    }
+
+    /** 文件夹内最近一次做题时间（无题库返回 0） */
+    public static long folderLastAt(long folderId) {
+        Cursor c = db().rawQuery("SELECT COALESCE(MAX(last_at),0) FROM banks WHERE folder_id=?",
+                new String[]{String.valueOf(folderId)});
+        long v = 0;
+        if (c.moveToFirst()) v = c.getLong(0);
+        c.close();
+        return v;
+    }
+
+    public static Folder getFolder(long id) {
+        for (Folder f : listFolders()) if (f.id == id) return f;
+        return null;
+    }
+
+    public static void setBankFolder(long bankId, long folderId) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("folder_id", folderId);
+        db().update("banks", v, "id=?", new String[]{String.valueOf(bankId)});
+    }
+
+    public static void setBankPinned(long bankId, boolean pinned) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("pinned", pinned ? 1 : 0);
+        db().update("banks", v, "id=?", new String[]{String.valueOf(bankId)});
+    }
+
+    public static void setFolderPinned(long folderId, boolean pinned) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("pinned", pinned ? 1 : 0);
+        db().update("folders", v, "id=?", new String[]{String.valueOf(folderId)});
+    }
+
+    /** 按给定顺序写入手动位置 */
+    public static void saveBankOrder(java.util.List<Long> ids) {
+        for (int i = 0; i < ids.size(); i++) {
+            android.content.ContentValues v = new android.content.ContentValues();
+            v.put("sort_pos", i);
+            db().update("banks", v, "id=?", new String[]{String.valueOf(ids.get(i))});
+        }
+    }
+
+    public static void saveFolderOrder(java.util.List<Long> ids) {
+        for (int i = 0; i < ids.size(); i++) {
+            android.content.ContentValues v = new android.content.ContentValues();
+            v.put("sort_pos", i);
+            db().update("folders", v, "id=?", new String[]{String.valueOf(ids.get(i))});
+        }
+    }
+
+    public static void setFolderSort(long folderId, int field, int dir) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("sort_field", field);
+        v.put("sort_dir", dir);
+        db().update("folders", v, "id=?", new String[]{String.valueOf(folderId)});
+    }
+
+    /** 文件夹内题库（按 sort_pos 顺序返回） */
+    public static java.util.List<Bank> banksInFolder(long folderId) {
+        java.util.List<Bank> out = new java.util.ArrayList<>();
+        for (Bank b : listBanks()) if (b.folderId == folderId) out.add(b);
         return out;
     }
 
@@ -351,6 +541,11 @@ public final class Db {
         }
         d.beginTransaction();
         try {
+            d.execSQL("DELETE FROM question_tags WHERE question_id IN"
+                    + " (SELECT id FROM questions WHERE bank_id=?)", new Object[]{s});
+            d.delete("tags", "bank_id=?", new String[]{s});
+            d.delete("recite_seen", "bank_id=?", new String[]{s});
+            d.delete("recite_progress", "bank_id=?", new String[]{s});
             d.delete("questions", "bank_id=?", new String[]{s});
             d.delete("records", "bank_id=?", new String[]{s});
             d.delete("wrongs", "bank_id=?", new String[]{s});
@@ -470,6 +665,18 @@ public final class Db {
         q.docNo = docCol >= 0 ? c.getInt(docCol) : 0;
         int noteCol = c.getColumnIndex("note");
         q.note = noteCol >= 0 ? c.getString(noteCol) : "";
+        int ioCol = c.getColumnIndex("image_only");
+        q.imageOnly = ioCol >= 0 && c.getInt(ioCol) == 1;
+        if (q.type == QuestionType.JUDGE) {
+            // 判断题统一锁成 A/B（旧数据可能是 对/错/√/×/T/F）
+            String j = com.ziruoling.quiz.core.AnswerUtil.normalizeJudge(q.answer);
+            if (!j.isEmpty()) q.answer = j;
+            if (q.options.size() != 2) {
+                q.options.clear();
+                q.options.add("对");
+                q.options.add("错");
+            }
+        }
         return q;
     }
 
@@ -601,6 +808,102 @@ public final class Db {
      * 把已有题目移动到目标分类的第 pos 题之前（pos=分类题数 表示末尾）。
      * 原位置之后的题顺延，目标位置之后的题顺延。做题记录跟着题目 id 走，不受影响。
      */
+    /** 清理未完成的草稿题（进程被杀后残留） */
+    // ==================== 专项训练会话 ====================
+
+    public static void saveSpecial(long bankId, List<Long> ids) {
+        db().delete("special_session", "bank_id=?", new String[]{String.valueOf(bankId)});
+        for (int i = 0; i < ids.size(); i++) {
+            android.content.ContentValues v = new android.content.ContentValues();
+            v.put("bank_id", bankId);
+            v.put("qid", ids.get(i));
+            v.put("pos", i);
+            v.put("done", 0);
+            v.put("correct", 0);
+            db().insertWithOnConflict("special_session", null, v,
+                    SQLiteDatabase.CONFLICT_REPLACE);
+        }
+    }
+
+    public static boolean hasSpecial(long bankId) {
+        Cursor c = db().rawQuery("SELECT 1 FROM special_session WHERE bank_id=? LIMIT 1",
+                new String[]{String.valueOf(bankId)});
+        boolean has = c.moveToFirst();
+        c.close();
+        return has;
+    }
+
+    public static List<Long> specialIds(long bankId) {
+        List<Long> out = new ArrayList<>();
+        Cursor c = db().rawQuery("SELECT qid FROM special_session WHERE bank_id=? ORDER BY pos",
+                new String[]{String.valueOf(bankId)});
+        while (c.moveToNext()) out.add(c.getLong(0));
+        c.close();
+        return out;
+    }
+
+    /** 已做题目 id → 是否正确 */
+    public static java.util.Map<Long, Boolean> specialDone(long bankId) {
+        java.util.Map<Long, Boolean> out = new java.util.HashMap<>();
+        Cursor c = db().rawQuery("SELECT qid, correct FROM special_session"
+                + " WHERE bank_id=? AND done=1", new String[]{String.valueOf(bankId)});
+        while (c.moveToNext()) out.put(c.getLong(0), c.getInt(1) == 1);
+        c.close();
+        return out;
+    }
+
+    public static void specialMark(long bankId, long qid, boolean correct) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("done", 1);
+        v.put("correct", correct ? 1 : 0);
+        db().update("special_session", v, "bank_id=? AND qid=?",
+                new String[]{String.valueOf(bankId), String.valueOf(qid)});
+    }
+
+    public static void specialReset(long bankId) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("done", 0);
+        v.put("correct", 0);
+        db().update("special_session", v, "bank_id=?", new String[]{String.valueOf(bankId)});
+    }
+
+    public static void specialDelete(long bankId) {
+        db().delete("special_session", "bank_id=?", new String[]{String.valueOf(bankId)});
+    }
+
+    public static int[] specialStats(long bankId) {
+        Cursor c = db().rawQuery("SELECT COUNT(*), COALESCE(SUM(done),0),"
+                + " COALESCE(SUM(correct),0) FROM special_session WHERE bank_id=?",
+                new String[]{String.valueOf(bankId)});
+        int[] r = new int[]{0, 0, 0};
+        if (c.moveToFirst()) {
+            r[0] = c.getInt(0);
+            r[1] = c.getInt(1);
+            r[2] = c.getInt(2);
+        }
+        c.close();
+        return r;
+    }
+
+    public static void deleteDrafts() {
+        db().delete("questions", "draft=1", null);
+    }
+
+    /** 直接添加题目：先建一条草稿，编辑保存后再选定分类与位置 */
+    public static long createDraftQuestion(long bankId) {
+        java.util.List<Long> ids = questionIds(bankId);
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("bank_id", bankId);
+        v.put("qindex", ids.size());
+        v.put("type", QuestionType.SINGLE);
+        v.put("content", "新题目");
+        v.put("answer", "");
+        v.put("analysis", "");
+        v.put("category", "");
+        v.put("draft", 1);
+        return db().insert("questions", null, v);
+    }
+
     public static void moveQuestion(long qid, String category, int pos) {
         Question q = getQuestion(qid);
         if (q == null) return;
@@ -612,7 +915,9 @@ public final class Db {
             at = ids.size();
         } else {
             int count = categoryCount(q.bankId, category);
-            at = indexOfQindex(q.bankId, start) + Math.max(0, Math.min(count, pos));
+            // pos < 0 表示追加到末尾；超出该分类题数时也夹到末尾
+            int p = pos < 0 ? count : Math.min(count, pos);
+            at = indexOfQindex(q.bankId, start) + Math.max(0, p);
         }
         at = Math.max(0, Math.min(ids.size(), at));
         ids.add(at, qid);
@@ -885,6 +1190,24 @@ public final class Db {
         return out;
     }
 
+    /** 某题库的附带数据数量：[收藏, 有标记的题, 有笔记的题] */
+    public static int[] bankExtraCounts(long bankId) {
+        String s = String.valueOf(bankId);
+        int[] out = new int[3];
+        Cursor c = db().rawQuery("SELECT COUNT(*) FROM favs f JOIN questions q ON q.id=f.question_id"
+                + " WHERE q.bank_id=?", new String[]{s});
+        if (c.moveToFirst()) out[0] = c.getInt(0);
+        c.close();
+        c = db().rawQuery("SELECT COUNT(DISTINCT qt.question_id) FROM question_tags qt"
+                + " JOIN questions q ON q.id=qt.question_id WHERE q.bank_id=?", new String[]{s});
+        if (c.moveToFirst()) out[1] = c.getInt(0);
+        c.close();
+        c = db().rawQuery("SELECT COUNT(*) FROM questions WHERE bank_id=? AND note<>''", new String[]{s});
+        if (c.moveToFirst()) out[2] = c.getInt(0);
+        c.close();
+        return out;
+    }
+
     /** 危险操作：删除一道题（连带该题的记录/错题/收藏/标记与图片），并把后续题号前移压缩 */
     public static void deleteQuestion(long qid) {
         Question q = getQuestion(qid);
@@ -894,6 +1217,9 @@ public final class Db {
         try {
             String s = String.valueOf(qid);
             d.delete("question_tags", "question_id=?", new String[]{s});
+            d.delete("recite_seen", "qid=?", new String[]{s});
+            d.execSQL("UPDATE recite_progress SET last_qid=0 WHERE bank_id=? AND last_qid=?",
+                    new Object[]{q.bankId, qid});
             d.delete("records", "question_id=?", new String[]{s});
             d.delete("wrongs", "question_id=?", new String[]{s});
             d.delete("favs", "question_id=?", new String[]{s});
@@ -1118,8 +1444,26 @@ public final class Db {
     // ==================== 总统计账本 ====================
 
     /** 日索引（UTC 天，与旧版"连续天数"口径一致） */
+    /** 按「本地日期」折算天序号，避免时区偏移导致日历错位一天 */
+    /** 累计作答次数（用于彩蛋门槛） */
+    public static long totalAnswerCount() {
+        Cursor c = db().rawQuery("SELECT COUNT(*) FROM records", null);
+        long n = 0;
+        if (c.moveToFirst()) n = c.getLong(0);
+        c.close();
+        return n;
+    }
+
     private static long dayIndex(long timeMs) {
-        return timeMs / 86400000L;
+        java.util.Calendar local = java.util.Calendar.getInstance();
+        local.setTimeInMillis(timeMs);
+        java.util.Calendar utc = java.util.Calendar.getInstance(
+                java.util.TimeZone.getTimeZone("UTC"));
+        utc.clear();
+        utc.set(local.get(java.util.Calendar.YEAR),
+                local.get(java.util.Calendar.MONTH),
+                local.get(java.util.Calendar.DAY_OF_MONTH));
+        return utc.getTimeInMillis() / 86400000L;
     }
 
     private static int questionType(long qid) {
@@ -1273,6 +1617,12 @@ public final class Db {
     /** 整题编辑保存：题型 / 题干 / 选项 / 答案 / 解析 / 图片路径 */
     public static void updateQuestion(long qid, int type, String content, List<String> options,
                                       String answer, String analysis, String imgPathsJson) {
+        updateQuestion(qid, type, content, options, answer, analysis, imgPathsJson, false);
+    }
+
+    public static void updateQuestion(long qid, int type, String content, List<String> options,
+                                      String answer, String analysis, String imgPathsJson,
+                                      boolean imageOnly) {
         ContentValues v = new ContentValues();
         v.put("type", type);
         v.put("content", content == null ? "" : content);
@@ -1280,6 +1630,8 @@ public final class Db {
         v.put("answer", answer == null ? "" : answer.trim());
         v.put("analysis", analysis == null ? "" : analysis.trim());
         v.put("img_paths", imgPathsJson == null ? "[]" : imgPathsJson);
+        v.put("image_only", imageOnly ? 1 : 0);
+        v.put("draft", 0);
         db().update("questions", v, "id=?", new String[]{String.valueOf(qid)});
     }
 
@@ -1414,6 +1766,89 @@ public final class Db {
         }
         c.close();
         return out;
+    }
+
+    /** 某月每天的做题量：下标 1..天数（0 位不用） */
+    public static int[] monthSeries(int year, int month) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(year, month - 1, 1, 0, 0, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        long start = dayIndex(cal.getTimeInMillis());
+        int days = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
+        int[] out = new int[days + 1];
+        Cursor c = db().rawQuery("SELECT day, answered FROM stats_days WHERE day >= ? AND day < ?",
+                new String[]{String.valueOf(start), String.valueOf(start + days)});
+        while (c.moveToNext()) {
+            int idx = (int) (c.getLong(0) - start) + 1;
+            if (idx >= 1 && idx <= days) out[idx] = c.getInt(1);
+        }
+        c.close();
+        return out;
+    }
+
+    /** 某一天的 [做题量, 正确数] */
+    public static int[] dayDetail(int year, int month, int day) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(year, month - 1, day, 0, 0, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        Cursor c = db().rawQuery("SELECT answered, correct FROM stats_days WHERE day = ?",
+                new String[]{String.valueOf(dayIndex(cal.getTimeInMillis()))});
+        int[] out = new int[2];
+        if (c.moveToFirst()) {
+            out[0] = c.getInt(0);
+            out[1] = c.getInt(1);
+        }
+        c.close();
+        return out;
+    }
+
+    /** 本周刷题量（周一为一周起点） */
+    public static int weekCount() {
+        long today = dayIndex(System.currentTimeMillis());
+        int dow = (int) ((today + 3) % 7);   // 1970-01-01 是周四：0=周一
+        long monday = today - dow;
+        Cursor c = db().rawQuery("SELECT COALESCE(SUM(answered),0) FROM stats_days WHERE day >= ?",
+                new String[]{String.valueOf(monday)});
+        int n = c.moveToFirst() ? c.getInt(0) : 0;
+        c.close();
+        return n;
+    }
+
+    /** 本月刷题量（自然月） */
+    public static int monthCount() {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        long start = cal.getTimeInMillis();
+        Cursor c = db().rawQuery("SELECT COALESCE(SUM(answered),0) FROM stats_days WHERE day >= ?",
+                new String[]{String.valueOf(dayIndex(start))});
+        int n = c.moveToFirst() ? c.getInt(0) : 0;
+        c.close();
+        return n;
+    }
+
+    /** 今日正确率（0-100）；今天没做题返回 -1 */
+    public static int todayRate() {
+        Cursor c = db().rawQuery("SELECT answered, correct FROM stats_days WHERE day = ?",
+                new String[]{String.valueOf(dayIndex(System.currentTimeMillis()))});
+        int a = 0, ok = 0;
+        if (c.moveToFirst()) {
+            a = c.getInt(0);
+            ok = c.getInt(1);
+        }
+        c.close();
+        return a <= 0 ? -1 : Math.round(ok * 100f / a);
+    }
+
+    /** 累计打卡天数（有作答的天数） */
+    public static int checkinDays() {
+        Cursor c = db().rawQuery("SELECT COUNT(*) FROM stats_days WHERE answered > 0", null);
+        int n = c.moveToFirst() ? c.getInt(0) : 0;
+        c.close();
+        return n;
     }
 
     public static int todayCount() {
@@ -1682,8 +2117,66 @@ public final class Db {
         db().insertWithOnConflict("progress", null, v, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
+    // ==================== 背题模式（独立进度，不参与统计） ====================
+
+    public static void markReciteSeen(long bankId, long qid) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("bank_id", bankId);
+        v.put("qid", qid);
+        db().insertWithOnConflict("recite_seen", null, v, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    public static boolean isReciteSeen(long bankId, long qid) {
+        Cursor c = db().rawQuery("SELECT 1 FROM recite_seen WHERE bank_id=? AND qid=? LIMIT 1",
+                new String[]{String.valueOf(bankId), String.valueOf(qid)});
+        boolean r = c.moveToFirst();
+        c.close();
+        return r;
+    }
+
+    public static java.util.Set<Long> reciteSeenIds(long bankId) {
+        java.util.Set<Long> out = new java.util.HashSet<>();
+        Cursor c = db().rawQuery("SELECT qid FROM recite_seen WHERE bank_id=?",
+                new String[]{String.valueOf(bankId)});
+        while (c.moveToNext()) out.add(c.getLong(0));
+        c.close();
+        return out;
+    }
+
+    public static int reciteSeenCount(long bankId) {
+        Cursor c = db().rawQuery("SELECT COUNT(*) FROM recite_seen WHERE bank_id=?",
+                new String[]{String.valueOf(bankId)});
+        int n = c.moveToFirst() ? c.getInt(0) : 0;
+        c.close();
+        return n;
+    }
+
+    public static long getReciteProgress(long bankId) {
+        Cursor c = db().rawQuery("SELECT last_qid FROM recite_progress WHERE bank_id=?",
+                new String[]{String.valueOf(bankId)});
+        long v = 0;
+        if (c.moveToFirst()) v = c.getLong(0);
+        c.close();
+        return v;
+    }
+
+    public static void setReciteProgress(long bankId, long lastQid) {
+        android.content.ContentValues v = new android.content.ContentValues();
+        v.put("bank_id", bankId);
+        v.put("last_qid", lastQid);
+        v.put("updated_at", System.currentTimeMillis());
+        db().insertWithOnConflict("recite_progress", null, v, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public static void resetRecite(long bankId) {
+        String s = String.valueOf(bankId);
+        db().delete("recite_progress", "bank_id=?", new String[]{s});
+        db().delete("recite_seen", "bank_id=?", new String[]{s});
+    }
+
     public static void resetProgress(long bankId) {
         db().delete("progress", "bank_id=?", new String[]{String.valueOf(bankId)});
+        resetRecite(bankId);   // 背题模式已看记录一并清空
     }
 
     // ==================== 考试 ====================
@@ -1806,7 +2299,8 @@ public final class Db {
             for (int i = 0; i < 6; i++) {
                 row[2 + i] = i < opts.size() ? opts.get(i) : "";
             }
-            row[8] = type == QuestionType.JUDGE ? AnswerUtil.judgeText(answer) : answer;
+            // 导出时判断题答案做兜底：能识别就「正确/错误」，识别不了原样导出
+            row[8] = AnswerUtil.answerDisplay(type, answer);
             row[9] = analysis == null ? "" : analysis;
             row[10] = category == null ? "" : category;
             rows.add(row);

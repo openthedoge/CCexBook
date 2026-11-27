@@ -2,6 +2,7 @@ package com.ziruoling.quiz.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -34,13 +35,17 @@ import java.util.zip.ZipOutputStream;
  *   <li>{@code manifest.json} —— 时间、版本、库版本、条目计数</li>
  *   <li>{@code db} —— SQLite 数据库文件快照（可能附带 {@code db-wal}）</li>
  *   <li>{@code imgs/xxx} —— 看图题图片原始字节</li>
+ *   <li>{@code prefs.json} —— 应用设置（主题/字号/语言/刷题行为/音效开关等，不含 session_running）</li>
+ *   <li>{@code snake_stats.json} —— 彩蛋统计（最高分/最长/游玩次数/总时长）</li>
+ *   <li>{@code sound/xxx} —— 自定义答对/答错音效文件（若有）</li>
  * </ul>
+ * 兼容：旧版备份没有后三个条目，恢复时跳过、保持当前设置。
+ * <p>
  * 性能优先：整文件快照 + 流式读写，不做逐行导出；几千题的库也是秒级。
- * 不含设置（主题/字体/开关），恢复后保持当前设置。
  */
 public final class Backup {
 
-    public static final String FILE_PREFIX = "紫若灵备份_";
+    public static final String FILE_PREFIX = "CC练习本 备份_";
     public static final String SNAPSHOT_NAME = "原数据.zip";
     public static final String MIME = "application/zip";
 
@@ -48,8 +53,19 @@ public final class Backup {
     private static final String MANIFEST = "manifest.json";
     private static final String DB_ENTRY = "db";
     private static final String IMG_PREFIX = "imgs/";
+    private static final String PREF_ENTRY = "prefs.json";
+    private static final String SNAKE_ENTRY = "snake_stats.json";
+    private static final String SOUND_PREFIX = "sound/";
+    private static final String PREF_NAME = "ziruoling_quiz";
+    private static final String SNAKE_PREF_NAME = "snake_stats";
+    private static final String SESSION_RUNNING = "session_running";
+    /** 本应用里以 long / float 存的设置键：JSON 不区分数字宽度（0.0 会写成 0），恢复时按原类型写回 */
+    private static final java.util.Set<String> LONG_PREF_KEYS =
+            java.util.Collections.singleton("totalMs");
+    private static final java.util.Set<String> FLOAT_PREF_KEYS =
+            java.util.Collections.singleton("bestF");
     /** 当前应用支持的最高库版本（恢复更低版本的备份时由 onUpgrade 自动迁移） */
-    private static final int DB_VERSION = 7;
+    private static final int DB_VERSION = 13;
 
     private Backup() {}
 
@@ -80,7 +96,7 @@ public final class Backup {
         }
     }
 
-    /** 备份文件名：紫若灵备份_20261119_193502.zip */
+    /** 备份文件名：CC练习本 备份_20261119_193502.zip */
     public static String suggestFileName() {
         java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
                 java.util.Locale.CHINA);
@@ -160,6 +176,9 @@ public final class Backup {
                     if (f.isFile()) putFile(z, IMG_PREFIX + f.getName(), f);
                 }
             }
+            putPrefs(z, c, PREF_NAME, PREF_ENTRY);
+            putPrefs(z, c, SNAKE_PREF_NAME, SNAKE_ENTRY);
+            putSounds(z, c);
             z.finish();
         } finally {
             z.close();
@@ -226,6 +245,51 @@ public final class Backup {
             copy(in, z);
         }
         z.closeEntry();
+    }
+
+    /** 把一份 SharedPreferences 整体写成 JSON 条目（跳过 session_running，不把「本次会话」状态带出去） */
+    private static void putPrefs(ZipOutputStream z, Context c, String prefName, String entry)
+            throws IOException {
+        SharedPreferences sp = c.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        JSONObject o = new JSONObject();
+        try {
+            for (Map.Entry<String, ?> en : sp.getAll().entrySet()) {
+                String k = en.getKey();
+                if (SESSION_RUNNING.equals(k)) continue;
+                Object v = en.getValue();
+                if (v instanceof Boolean || v instanceof Integer || v instanceof Long
+                        || v instanceof Float || v instanceof String) {
+                    o.put(k, v);
+                } else if (v instanceof java.util.Set) {
+                    JSONArray a = new JSONArray();
+                    for (Object item : (java.util.Set<?>) v) {
+                        if (item != null) a.put(item.toString());
+                    }
+                    o.put(k, a);
+                }
+            }
+        } catch (JSONException ignored) {
+        }
+        ZipEntry e = new ZipEntry(entry);
+        e.setTime(System.currentTimeMillis());
+        z.putNextEntry(e);
+        z.write(o.toString().getBytes("UTF-8"));
+        z.closeEntry();
+    }
+
+    /** 自定义答对/答错音效：filesDir 下 sound_ok_custom.* 与 sound_wrong_custom.* */
+    private static void putSounds(ZipOutputStream z, Context c) throws IOException {
+        File[] files = c.getFilesDir().listFiles();
+        if (files == null) return;
+        for (File f : files) {
+            if (!f.isFile() || !isSoundFile(f.getName())) continue;
+            putFile(z, SOUND_PREFIX + f.getName(), f);
+        }
+    }
+
+    /** 是否为自定义音效文件名（答对 / 答错） */
+    private static boolean isSoundFile(String name) {
+        return name.startsWith("sound_ok_custom.") || name.startsWith("sound_wrong_custom.");
     }
 
     // ==================== 追加导入 ====================
@@ -575,7 +639,8 @@ public final class Backup {
     // ==================== 覆盖导入 ====================
 
     /**
-     * 用备份整体替换当前数据（不含设置）。
+     * 用备份整体替换当前数据；备份里带设置 / 彩蛋统计 / 自定义音效时一并恢复
+     * （旧备份没有这些条目时保持当前设置）。
      *
      * @param snapshotCurrent 是否先把当前数据存成「原数据」快照
      */
@@ -638,6 +703,107 @@ public final class Backup {
             tmpDb.delete();
             deleteRecursive(tmpImgs);
             Db.init(c);
+        }
+
+        // 备份里的设置 / 彩蛋统计 / 自定义音效（旧备份没有这些条目时保持当前设置）
+        restoreExtras(c, zip);
+    }
+
+    // ==================== 设置 / 彩蛋 / 音效（扩展备份） ====================
+
+    /** 覆盖恢复后：按需恢复设置 / 彩蛋统计 / 自定义音效（旧备份没有对应条目就跳过） */
+    private static void restoreExtras(Context c, File zip) throws IOException {
+        try (ZipFile zf = new ZipFile(zip)) {
+            restorePrefs(c, zf, PREF_ENTRY, PREF_NAME, true);
+            restorePrefs(c, zf, SNAKE_ENTRY, SNAKE_PREF_NAME, false);
+            restoreSounds(c, zf);
+        }
+    }
+
+    /**
+     * 恢复一份 SharedPreferences。
+     *
+     * @param remapSound 是否需要把自定义音效的旧绝对路径改到当前 filesDir
+     */
+    private static void restorePrefs(Context c, ZipFile zf, String entry, String prefName,
+                                     boolean remapSound) throws IOException {
+        ZipEntry e = zf.getEntry(entry);
+        if (e == null) return;
+        JSONObject o;
+        try {
+            o = new JSONObject(readAll(zf.getInputStream(e)));
+        } catch (JSONException ex) {
+            return; // 条目损坏就当没有，保持当前设置
+        }
+        SharedPreferences sp = c.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        SharedPreferences.Editor ed = sp.edit();
+        java.util.Iterator<String> keys = o.keys();
+        while (keys.hasNext()) {
+            String k = keys.next();
+            if (SESSION_RUNNING.equals(k)) continue;
+            Object v = o.opt(k);
+            if (v == null || v == JSONObject.NULL) continue;
+            if (v instanceof Boolean) {
+                ed.putBoolean(k, (Boolean) v);
+            } else if (v instanceof Number) {
+                putNumber(ed, k, (Number) v);
+            } else if (v instanceof String) {
+                String s = (String) v;
+                // 自定义音效存的是绝对路径，换设备/换包名后要指到当前包的 filesDir
+                if (remapSound && ("sound_ok_path".equals(k) || "sound_wrong_path".equals(k))
+                        && !s.trim().isEmpty()) {
+                    s = new File(c.getFilesDir(), new File(s).getName()).getAbsolutePath();
+                }
+                ed.putString(k, s);
+            } else if (v instanceof JSONArray) {
+                JSONArray a = (JSONArray) v;
+                java.util.Set<String> set = new java.util.HashSet<>();
+                for (int i = 0; i < a.length(); i++) set.add(a.optString(i, ""));
+                ed.putStringSet(k, set);
+            }
+        }
+        ed.apply();
+    }
+
+    /** 数字设置写回：JSON 不区分 int/long/float，按原类型恢复（totalMs=long，bestF=float） */
+    private static void putNumber(SharedPreferences.Editor ed, String k, Number v) {
+        if (FLOAT_PREF_KEYS.contains(k) || v instanceof Double || v instanceof Float) {
+            ed.putFloat(k, v.floatValue());
+        } else if (LONG_PREF_KEYS.contains(k) || v instanceof Long) {
+            ed.putLong(k, v.longValue());
+        } else {
+            ed.putInt(k, v.intValue());
+        }
+    }
+
+    /** 恢复自定义音效：有 sound/ 条目时先删当前自定义音效，再逐个写回 */
+    private static void restoreSounds(Context c, ZipFile zf) throws IOException {
+        List<String> names = new ArrayList<>();
+        Enumeration<? extends ZipEntry> en = zf.entries();
+        while (en.hasMoreElements()) {
+            ZipEntry e = en.nextElement();
+            if (e.isDirectory() || !e.getName().startsWith(SOUND_PREFIX)) continue;
+            String name = e.getName().substring(SOUND_PREFIX.length());
+            if (name.contains("/") || !isSoundFile(name)) continue;
+            names.add(name);
+        }
+        if (names.isEmpty()) return;
+        File dir = c.getFilesDir();
+        File[] old = dir.listFiles();
+        if (old != null) {
+            for (File f : old) {
+                if (!f.isFile() || !isSoundFile(f.getName())) continue;
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+            }
+        }
+        for (String name : names) {
+            ZipEntry e = zf.getEntry(SOUND_PREFIX + name);
+            if (e == null) continue;
+            try (InputStream in = zf.getInputStream(e);
+                 FileOutputStream out = new FileOutputStream(new File(dir, name))) {
+                copy(in, out);
+            }
         }
     }
 

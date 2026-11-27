@@ -365,21 +365,64 @@ public class ExamActivity extends BaseActivity {
             Question q = getQ(qid);
             String ans = userAnswer(qid);
             boolean ok = isCorrect(q, ans);
+            // 本次展示顺序下的正确答案（选项乱序时字母已重映射），与部分分判定同一口径
+            String expected = displayAnswerOf(q);
+            double qFull = fullPointsOf(q);
             detail[q.type][1]++;
             if (ok) {
                 detail[q.type][0]++;
                 correctCount++;
-                score += points[q.type];
+                score += qFull;
+            } else if (partialCredit(q, ans, expected)) {
+                score += qFull * Prefs.examPartialPercent() / 100.0;
             } else {
                 wrongIds.add(qid);
             }
-            full += points[q.type];
+            full += qFull;
             Db.addRecord(q.bankId, qid, 1, ans, ok, Prefs.wrongAutoRemove());
+            if (ans != null && !ans.trim().isEmpty()) Prefs.snakeGateOnAnswer();
         }
         long examId = Db.addExam(bankId, "模拟考试", ids.length, answeredCount, correctCount,
                 score, full, Math.max(0, durationSec - remaining), wrongIds, detail);
         finish();
         ExamResultActivity.start(this, examId);
+    }
+
+    /** 单题满分：填空 = 空数 × 每空分值，其它 = 题型分值 */
+    private double fullPointsOf(Question q) {
+        if (q.type == QuestionType.FILL) {
+            int blanks = com.ziruoling.quiz.core.AnswerUtil.blankCount(q.content);
+            if (blanks <= 0) blanks = 1;
+            return blanks * Prefs.examBlankScore();
+        }
+        return points[q.type];
+    }
+
+    /**
+     * 本次展示顺序下的正确答案：已渲染的题直接用缓存；未渲染的题按同一确定性种子重算乱序答案。
+     * 与 {@link #buildOptions} 的映射口径一致（{@code sessionSeed + q.id}、同样的跳过条件）。
+     */
+    private String displayAnswerOf(Question q) {
+        String cached = displayAnswerCache.get(q.id);
+        if (cached != null) return cached;
+        String expected = q.answer;
+        if (shuffleOpts && !OptionShuffler.shouldSkip(q.type, q.options.size())) {
+            expected = OptionShuffler.shuffle(q.options, q.answer, sessionSeed + q.id).answer;
+        }
+        displayAnswerCache.put(q.id, expected);
+        return expected;
+    }
+
+    /** 多选部分分：所选答案非空、全部包含在本次展示映射后的正确答案内且未选全 */
+    private boolean partialCredit(Question q, String ans, String expected) {
+        if (q.type != QuestionType.MULTI) return false;
+        String u = com.ziruoling.quiz.core.AnswerUtil.extractLetters(ans);
+        String a = com.ziruoling.quiz.core.AnswerUtil.extractLetters(expected);
+        if (u.isEmpty() || a.isEmpty() || u.equals(a)) return false;
+        for (int i = 0; i < u.length(); i++) {
+            if (a.indexOf(u.charAt(i)) < 0) return false;
+        }
+        return true;
     }
 
     private Question getQ(long id) {

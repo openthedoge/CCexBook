@@ -44,6 +44,7 @@ public class EditQuestionActivity extends BaseActivity {
     private static final int REQ_PICK_IMAGES = 301;
     private static final int MAX_IMAGES = 9;
     private static final int MAX_OPTIONS = 6;
+    private boolean imageOnly;
 
     private long qid;
     private Question origin;
@@ -94,9 +95,17 @@ public class EditQuestionActivity extends BaseActivity {
 
         contentEt.setText(origin.content == null ? "" : origin.content);
         answerEt.setText(origin.answer == null ? "" : origin.answer);
+        setupJudgeAnswer();
         analysisEt.setText(origin.analysis == null ? "" : origin.analysis);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        imageOnly = origin.imageOnly;
+        final TextView swImageOnly = findViewById(R.id.swImageOnly);
+        renderImageOnly(swImageOnly);
+        swImageOnly.setOnClickListener(v -> {
+            imageOnly = !imageOnly;
+            renderImageOnly(swImageOnly);
+        });
         findViewById(R.id.btnSave).setOnClickListener(v -> save());
         findViewById(R.id.btnSaveBottom).setOnClickListener(v -> save());
         // 移动到其他分类的任意位置（默认末尾）；题目 id 不变，做题记录不受影响
@@ -178,8 +187,8 @@ public class EditQuestionActivity extends BaseActivity {
         if (t == QuestionType.JUDGE) {
             judgeBackup = new ArrayList<>(optionTexts);
             optionTexts.clear();
-            optionTexts.add("正确");
-            optionTexts.add("错误");
+            optionTexts.add("对");
+            optionTexts.add("错");
         }
         type = t;
         refreshTypeChips();
@@ -194,6 +203,57 @@ public class EditQuestionActivity extends BaseActivity {
                 || type == QuestionType.JUDGE || type == QuestionType.SORT;
         optionsWrap.setVisibility(hasOptions ? View.VISIBLE : View.GONE);
         btnAddOption.setVisibility(type == QuestionType.JUDGE ? View.GONE : View.VISIBLE);
+    }
+
+    /** 判断题：答案锁成 A/B，用两个按钮点选，避免绑定「对/错」文本 */
+    private void setupJudgeAnswer() {
+        if (origin.type != QuestionType.JUDGE) return;
+        android.view.ViewGroup parent = (android.view.ViewGroup) answerEt.getParent();
+        if (parent == null) return;
+        android.widget.LinearLayout row = new android.widget.LinearLayout(this);
+        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        row.setPadding(0, Ui.dp(this, 6), 0, 0);
+        String cur = com.ziruoling.quiz.core.AnswerUtil.normalizeJudge(answerEt.getText().toString());
+        if (cur.isEmpty()) cur = "A";
+        final String[] picked = {cur};
+        final TextView a = judgeBtn("A   对");
+        final TextView b = judgeBtn("B   错");
+        row.addView(a);
+        row.addView(b);
+        answerEt.setVisibility(android.view.View.GONE);
+        parent.addView(row, parent.indexOfChild(answerEt) + 1);
+        answerEt.setText(picked[0]);
+        renderJudgePick(a, b, picked[0]);
+        a.setOnClickListener(v -> {
+            picked[0] = "A";
+            answerEt.setText("A");
+            renderJudgePick(a, b, "A");
+        });
+        b.setOnClickListener(v -> {
+            picked[0] = "B";
+            answerEt.setText("B");
+            renderJudgePick(a, b, "B");
+        });
+    }
+
+    private TextView judgeBtn(String text) {
+        TextView t = Ui.text(this, text, 15, R.attr.qzPrimary, Typeface.BOLD);
+        t.setGravity(android.view.Gravity.CENTER);
+        t.setPadding(Ui.dp(this, 18), Ui.dp(this, 10), Ui.dp(this, 18), Ui.dp(this, 10));
+        android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, 0, Ui.dp(this, 10), 0);
+        t.setLayoutParams(lp);
+        return t;
+    }
+
+    private void renderJudgePick(TextView a, TextView b, String pick) {
+        boolean isA = "A".equals(pick);
+        a.setBackground(Ui.bg(Ui.attrColor(this, isA ? R.attr.qzPrimary : R.attr.qzChipBg), Ui.dp(this, 8)));
+        b.setBackground(Ui.bg(Ui.attrColor(this, !isA ? R.attr.qzPrimary : R.attr.qzChipBg), Ui.dp(this, 8)));
+        a.setTextColor(Ui.attrColor(this, isA ? R.attr.qzOnPrimary : R.attr.qzPrimary));
+        b.setTextColor(Ui.attrColor(this, !isA ? R.attr.qzOnPrimary : R.attr.qzPrimary));
     }
 
     // ==================== 选项 ====================
@@ -280,7 +340,7 @@ public class EditQuestionActivity extends BaseActivity {
             case QuestionType.MULTI:
                 return "多个字母，如 ABD";
             case QuestionType.JUDGE:
-                return "对 或 错（也可填 A / B）";
+                return "点选 A 对 / B 错";
             case QuestionType.FILL:
                 return "参考答案；多个可接受答案用 || 分隔";
             case QuestionType.SORT:
@@ -422,11 +482,22 @@ public class EditQuestionActivity extends BaseActivity {
 
     // ==================== 保存 ====================
 
+    private void renderImageOnly(TextView t) {
+        t.setText(imageOnly ? "纯图题：开" : "纯图题：关");
+        t.setTextColor(Ui.attrColor(this, imageOnly ? R.attr.qzOnPrimary : R.attr.qzPrimary));
+        t.setBackground(Ui.bg(Ui.attrColor(this,
+                imageOnly ? R.attr.qzPrimary : R.attr.qzChipBg), Ui.dp(this, 8)));
+    }
+
     private void save() {
         String content = contentEt.getText().toString().trim();
-        if (content.isEmpty()) {
+        if (content.isEmpty() && !imageOnly) {
             Ui.toast(this, "题干不能为空");
             contentEt.requestFocus();
+            return;
+        }
+        if (imageOnly && imgPaths.size() == 0) {
+            Ui.toast(this, "纯图题至少需要一张图片");
             return;
         }
         syncOptionsFromViews();
@@ -438,11 +509,18 @@ public class EditQuestionActivity extends BaseActivity {
             if (s != null && !s.trim().isEmpty()) opts.add(s.trim());
         }
         if (needOptions) {
-            if (type == QuestionType.JUDGE) {
+            if (imageOnly) {
+                opts = new ArrayList<>();
+                for (int i = 0; i < optionTexts.size(); i++) {
+                    String t = optionTexts.get(i);
+                    opts.add(t == null ? "" : t.trim());
+                }
+                while (opts.size() < 2) opts.add("");
+            } else if (type == QuestionType.JUDGE) {
                 opts.clear();
                 opts.add("正确");
                 opts.add("错误");
-            } else if (opts.size() < 2) {
+            } else if (!imageOnly && opts.size() < 2) {
                 Ui.toast(this, "至少需要两个选项");
                 return;
             }
@@ -452,6 +530,16 @@ public class EditQuestionActivity extends BaseActivity {
             return;
         }
 
+        if (type == QuestionType.FILL && !imageOnly) {
+            int blanks = com.ziruoling.quiz.core.AnswerUtil.blankCount(content);
+            String raw = answerEt.getText().toString().trim();
+            int segs = com.ziruoling.quiz.core.AnswerUtil.fillSegmentCount(raw);
+            if (blanks > 0 && segs != blanks) {
+                Ui.toast(this, "题干有 " + blanks + " 个空，答案需 " + blanks + " 段（用 | 分隔）");
+                answerEt.requestFocus();
+                return;
+            }
+        }
         AnswerRule.Check ck = AnswerRule.check(type, answerEt.getText().toString(), opts.size());
         if (!ck.ok()) {
             updateHint();
@@ -460,8 +548,12 @@ public class EditQuestionActivity extends BaseActivity {
             return;
         }
 
+        java.util.List<String> safeImgs = new java.util.ArrayList<>();
+        for (String rel : imgPaths) {
+            if (rel != null && !rel.isEmpty()) safeImgs.add(rel);
+        }
         Db.updateQuestion(qid, type, content, opts, ck.answer,
-                analysisEt.getText().toString(), new JSONArray(imgPaths).toString());
+                analysisEt.getText().toString(), new JSONArray(safeImgs).toString(), imageOnly);
         if (type != origin.type) Db.rejudgeQuestion(qid);
         for (String rel : removedImgs) Db.deleteImageFile(rel);
 

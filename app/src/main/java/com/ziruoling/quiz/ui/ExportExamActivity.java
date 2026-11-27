@@ -202,7 +202,7 @@ public class ExportExamActivity extends BaseActivity {
         intent.setType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
         String name = paperName.getText().toString().trim();
         if (name.isEmpty()) name = "试卷";
-        intent.putExtra(Intent.EXTRA_TITLE, name + ".docx");
+        intent.putExtra(Intent.EXTRA_TITLE, BankExportHelper.safeFileName(name, ".docx"));
         startActivityForResult(intent, REQ_SAVE);
     }
 

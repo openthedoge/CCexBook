@@ -41,6 +41,7 @@ public class ImportActivity extends BaseActivity {
 
     private static final int REQ_PICK = 301;
     private static final int REQ_TEMPLATE = 302;
+    private static final int REQ_TEMPLATE_SAMPLE = 303;
 
     private TextView fileInfo, warnings, btnImport;
     private EditText name;
@@ -154,14 +155,14 @@ public class ImportActivity extends BaseActivity {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         intent.putExtra(Intent.EXTRA_TITLE, sample ? "刷题导入模板_示例.xlsx" : "刷题导入模板.xlsx");
-        startActivityForResult(intent, REQ_TEMPLATE);
+        startActivityForResult(intent, sample ? REQ_TEMPLATE_SAMPLE : REQ_TEMPLATE);
     }
 
     private void exportTemplateWord() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        intent.putExtra(Intent.EXTRA_TITLE, "刷题导入模板_Word版.docx");
+        intent.putExtra(Intent.EXTRA_TITLE, "刷题导入模板.docx");
         startActivityForResult(intent, REQ_TEMPLATE);
     }
 
@@ -175,15 +176,23 @@ public class ImportActivity extends BaseActivity {
                 return;
             }
             parseUri(data.getData());
-        } else if (requestCode == REQ_TEMPLATE && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+        } else if ((requestCode == REQ_TEMPLATE || requestCode == REQ_TEMPLATE_SAMPLE)
+                && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
             try {
                 OutputStream os = getContentResolver().openOutputStream(data.getData());
                 if (os != null) {
                     String name = queryName(data.getData());
                     if (name != null && name.toLowerCase().endsWith(".docx")) {
-                        DocxWriter.writeTemplate(os);
+                        // 使用内置的新版 Word 模板（assets 内文件），不再现场生成
+                        try (java.io.InputStream in = getAssets().open("刷题导入模板.docx")) {
+                            byte[] buf = new byte[8192];
+                            int n;
+                            while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
+                        }
                     } else {
-                        XlsxWriter.write(os, "模板", templateRows());
+                        // 「导出空白模板」只写表头；「导出示例模板」才带示例行
+                        XlsxWriter.write(os, "模板", requestCode == REQ_TEMPLATE_SAMPLE
+                                ? templateRows() : templateHeaderRows());
                     }
                     os.close();
                     Ui.toast(this, "模板已导出，可在电脑上用 Office/WPS 编辑后导入");
@@ -517,6 +526,11 @@ public class ImportActivity extends BaseActivity {
         Ui.toast(this, msg);
         BankHomeActivity.start(this, bankId);
         finish();
+    }
+
+    /** 「导出空白模板」只写表头行（与带示例行的 templateRows 区分） */
+    private List<String[]> templateHeaderRows() {
+        return java.util.Collections.singletonList(templateRows().get(0));
     }
 
     private List<String[]> templateRows() {

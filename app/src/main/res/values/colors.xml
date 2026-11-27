@@ -80,4 +80,14 @@
     <!-- 通用 -->
     <color name="white">#FFFFFF</color>
     <color name="gray">#9AA3AD</color>
+    <!-- 对话框列表项文字：浅色用更深一档的主题色，纯黑用灰 -->
+    <color name="dialogItemBlueLight">#2B54A8</color>
+    <color name="dialogItemRedLight">#9E322E</color>
+    <color name="dialogItemGreenLight">#1F7A52</color>
+    <color name="dialogItemOrangeLight">#B0610F</color>
+    <color name="dialogItemPurpleLight">#5B44A8</color>
+    <color name="dialogItemBlack">#B9BEC4</color>
+    <!-- 危险操作（删除/清空）独立红，不随主题配色变化 -->
+    <color name="danger">#D93B3B</color>
+    <color name="onDanger">#FFFFFF</color>
 </resources>

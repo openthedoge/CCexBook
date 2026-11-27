@@ -65,12 +65,26 @@ public final class AnswerSheetDialog {
         // 历史已答：同色系但半透明，与「本次已答」的实心色区分
         int histGreen = (green & 0x00FFFFFF) | 0x66000000;
         int histRed = (red & 0x00FFFFFF) | 0x66000000;
+        boolean reciteSheet = false;
+        for (int st : states) {
+            if (st == 5) {
+                reciteSheet = true;
+                break;
+            }
+        }
+        int seenFg = (primary & 0x00FFFFFF) | 0x99000000;
+        if (reciteSheet) {
+            legend.addView(legendChip(c, "未看", chipBg, textColor));
+            legend.addView(legendChip(c, "已看", (primary & 0x00FFFFFF) | 0x33000000, seenFg));
+            root.addView(legend);
+        } else {
         legend.addView(legendChip(c, "未答", chipBg, textColor));
         legend.addView(legendChip(c, "本次对", green, onPrimary));
         legend.addView(legendChip(c, "本次错", red, onPrimary));
         legend.addView(legendChip(c, "历史", histGreen, textColor));
         legend.addView(legendChip(c, "当前", primary, onPrimary));
         root.addView(legend);
+        }
 
         // 宫格（自适应列数）
         GridLayout grid = new GridLayout(c);
@@ -82,7 +96,15 @@ public final class AnswerSheetDialog {
             t.setGravity(Gravity.CENTER);
             t.setTextColor(textColor);
             int bg = chipBg;
-            if (i == current) {
+            if (reciteSheet && states[i] == 5) {
+                // 背题模式：当前题与已看题统一显示半透明「阅」
+                t.setText("阅");
+                t.setTextSize(16);
+                t.setTextColor(i == current ? seenFg : seenFg);
+                bg = i == current
+                        ? ((primary & 0x00FFFFFF) | 0x33000000)
+                        : ((primary & 0x00FFFFFF) | 0x1A000000);
+            } else if (i == current) {
                 t.setTextColor(onPrimary);
                 bg = primary;
             } else if (states[i] == 1) {
@@ -97,6 +119,11 @@ public final class AnswerSheetDialog {
             } else if (states[i] == 4) {
                 t.setTextColor(textColor);
                 bg = histRed;
+            } else if (states[i] == 5) {
+                t.setText("阅");
+                t.setTextSize(16);
+                t.setTextColor(seenFg);
+                bg = (primary & 0x00FFFFFF) | 0x1A000000;
             }
             t.setBackground(Ui.bg(bg, Ui.dp(c, 10)));
             GridLayout.LayoutParams lp = new GridLayout.LayoutParams();

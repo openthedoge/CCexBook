@@ -86,6 +86,43 @@ public final class AnswerUtil {
         return h;
     }
 
+    /** 题干中的空数：连续 __ 算 1 个；（）/() 中间为空或空格算 1 个 */
+    public static int blankCount(String content) {
+        if (content == null) return 0;
+        int n = 0;
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("_{2,}|[（(]\\s*[）)]").matcher(content);
+        while (m.find()) n++;
+        return n;
+    }
+
+    /** 填空答案段数（先按 || 取第一组等价答案，再按 | 拆空） */
+    public static int fillSegmentCount(String answer) {
+        if (answer == null) return 0;
+        String first = answer.split("\\|\\|")[0];
+        if (first.trim().isEmpty()) return 0;
+        return first.split("\\|", -1).length;
+    }
+
+    /** 逐空判定：全部相等才算对 */
+    public static boolean matchFillBlanks(String[] inputs, String ref) {
+        if (inputs == null || inputs.length == 0 || ref == null) return false;
+        String[] alts = ref.split("\\|\\|");
+        for (String alt : alts) {
+            String[] parts = alt.split("\\|", -1);
+            if (parts.length != inputs.length) continue;
+            boolean all = true;
+            for (int i = 0; i < parts.length; i++) {
+                if (!normFill(inputs[i] == null ? "" : inputs[i]).equals(normFill(parts[i]))) {
+                    all = false;
+                    break;
+                }
+            }
+            if (all) return true;
+        }
+        return false;
+    }
+
     /** 填空题判定：支持 "||" 分隔的多个参考答案 */
     public static boolean matchFill(String user, String ref) {
         if (ref == null) return false;
@@ -165,14 +202,20 @@ public final class AnswerUtil {
         }
     }
 
-    /** 答案显示文本（用于结果区） */
+    /**
+     * 答案显示文本（用于结果区）。
+     * <p>
+     * 判断题：能规范化成 A/B 时显示「正确 / 错误」；无法规范化（脏数据）时原样显示原答案，
+     * 不能一律回落到「错误」。原答案为空（含纯空白）时返回空串，由调用方决定占位符。
+     */
     public static String answerDisplay(int type, String answer) {
         if (answer == null) return "";
-        switch (type) {
-            case QuestionType.JUDGE:
-                return normalizeJudge(answer).isEmpty() ? answer : judgeText(normalizeJudge(answer));
-            default:
-                return answer;
+        String raw = answer.trim();
+        if (raw.isEmpty()) return "";
+        if (type == QuestionType.JUDGE) {
+            String j = normalizeJudge(raw);
+            return j.isEmpty() ? raw : judgeText(j);
         }
+        return answer;
     }
 }

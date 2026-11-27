@@ -64,8 +64,15 @@
         <activity android:name=".ui.AppendQuestionsActivity" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.ChangelogActivity" />
         <activity android:name=".ui.StatsActivity" />
-        <activity android:name=".ui.SettingsActivity" />
         <activity android:name=".ui.ExportExamActivity" android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.SnakeActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.ImportEntryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

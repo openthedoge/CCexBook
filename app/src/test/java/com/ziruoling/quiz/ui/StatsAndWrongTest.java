@@ -95,7 +95,7 @@ public class StatsAndWrongTest {
         assertEquals(0, Math.round(ts[QuestionType.SINGLE][0] * 100f / ts[QuestionType.SINGLE][1]));
     }
 
-    /** 错题重做答错后：显示「移出错题本」，点击后该题变已掌握 */
+    /** 错题重做答错后：不显示「移出错题本」（只有答对才可移出） */
     @Test
     public void removeWrongButtonInWrongMode() {
         long bankId = seed();
@@ -116,10 +116,8 @@ public class StatsAndWrongTest {
         LinearLayout options = a.findViewById(R.id.options);
         options.getChildAt(wrongIdx).performClick();
 
-        assertEquals("答错后应显示移出按钮", View.VISIBLE, btn.getVisibility());
-        btn.performClick();
-        assertEquals("点击后应变为已掌握", 2, Db.wrongStatus(qid));
-        assertEquals(View.GONE, btn.getVisibility());
+        assertEquals("答错后不应显示移出按钮", View.GONE, btn.getVisibility());
+        assertEquals("答错不应改变错题状态", 1, Db.wrongStatus(qid));
         c.destroy();
     }
 

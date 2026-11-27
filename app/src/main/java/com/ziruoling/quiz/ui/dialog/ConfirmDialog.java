@@ -27,18 +27,19 @@ public final class ConfirmDialog {
                     if (ok != null) ok.onOk();
                 })
                 .setNegativeButton(Tr.s("取消"), null)
+                .danger()
                 .show();
     }
 
     /** 危险操作（红色确认键） */
     public static void showDanger(Context c, String title, String message, Callback ok) {
-        new com.ziruoling.quiz.util.Ui.AlertBuilder(c)
+        com.ziruoling.quiz.util.Ui.AlertBuilder b = new com.ziruoling.quiz.util.Ui.AlertBuilder(c)
                 .setTitle(Tr.s(title))
                 .setMessage(Tr.s(message))
                 .setPositiveButton(Tr.s("删除"), (d, w) -> {
                     if (ok != null) ok.onOk();
                 })
-                .setNegativeButton(Tr.s("取消"), null)
-                .show();
+                .setNegativeButton(Tr.s("取消"), null);
+        b.danger().show();
     }
 }

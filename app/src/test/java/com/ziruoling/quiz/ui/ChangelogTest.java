@@ -41,10 +41,16 @@ public class ChangelogTest {
     public void parsesAllVersionsNewestFirst() throws Exception {
         List<ChangelogActivity.Entry> entries = ChangelogActivity.parse(readAsset());
         assertTrue("应至少包含 v1.0 起的各版本段", entries.size() >= 5);
-        assertTrue("最新版本应在最上面", entries.get(0).header.startsWith("v1.6"));
-        assertTrue("最新版本应含追加题目", entries.get(0).lines.toString().contains("笔记"));
-        assertTrue(entries.get(1).header.startsWith("v1.5"));
-        assertTrue("v1.5 应记录多词条", entries.get(1).lines.toString().contains("多词条"));
+        assertTrue("最新版本应在最上面", entries.get(0).header.startsWith("v1.10"));
+        boolean bankFileItem = false;
+        boolean reciteItem = false;
+        for (ChangelogActivity.Entry en : entries) {
+            String body = en.lines.toString();
+            if (en.header.startsWith("v1.9") && body.contains("题库文件管理")) bankFileItem = true;
+            if (body.contains("背题模式重做")) reciteItem = true;
+        }
+        assertTrue("应有题库文件管理相关条目", bankFileItem);
+        assertTrue("应有背题模式重做条目", reciteItem);
         assertTrue("最早版本应在最下面",
                 entries.get(entries.size() - 1).header.startsWith("fork-v1.0"));
         assertFalse("版本下应有条目", entries.get(0).lines.isEmpty());

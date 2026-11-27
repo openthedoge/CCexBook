@@ -8,7 +8,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/qzPrimary">
+        android:background="@drawable/bg_topbar">
 
         <TextView
             android:id="@+id/btnBack"
@@ -43,6 +43,34 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="12dp">
+
+            <LinearLayout
+                android:id="@+id/settingsBackBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/btnSettingsBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="46dp"
+                    android:gravity="center"
+                    android:paddingEnd="12dp"
+                    android:text="‹ 返回"
+                    android:textColor="?attr/qzPrimary"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/settingsSectionTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/qzText"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- ========== 首屏：分组入口 ========== -->
             <LinearLayout
@@ -227,8 +255,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card"
-                    android:elevation="2dp"
+                    android:background="@android:color/transparent"
                     android:orientation="vertical"
                     android:padding="14dp">
 
@@ -271,8 +298,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_card"
-                    android:elevation="2dp"
+                    android:background="@android:color/transparent"
                     android:orientation="vertical"
                     android:padding="14dp">
 
@@ -280,134 +306,53 @@
                         android:text="@string/ui_10"
                         android:textColor="?attr/qzText"
                         android:textSize="15sp" />
-
-                    <RadioGroup
-                        android:id="@+id/themeGroup"
+                    <LinearLayout
+                        android:id="@+id/themeSeg"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <RadioButton
-                            android:id="@+id/themeAuto"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_123" />
-
-                        <RadioButton
-                            android:id="@+id/themeLight"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_80" />
-
-                        <RadioButton
-                            android:id="@+id/themeDark"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_82" />
-
-                        <RadioButton
-                            android:id="@+id/themeBlack"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_106" />
-                    </RadioGroup>
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal" />
 
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
                         android:text="@string/ui_11"
                         android:textColor="?attr/qzText"
                         android:textSize="15sp" />
-
-                    <RadioGroup
-                        android:id="@+id/colorGroup"
+                    <LinearLayout
+                        android:id="@+id/colorDots"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <RadioButton
-                            android:id="@+id/colorBlue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_93" />
-
-                        <RadioButton
-                            android:id="@+id/colorRed"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_8" />
-
-                        <RadioButton
-                            android:id="@+id/colorGreen"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_110" />
-
-                        <RadioButton
-                            android:id="@+id/colorOrange"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_79" />
-
-                        <RadioButton
-                            android:id="@+id/colorPurple"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_81" />
-                    </RadioGroup>
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal" />
 
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
                         android:text="@string/ui_45"
                         android:textColor="?attr/qzText"
                         android:textSize="15sp" />
-
-                    <RadioGroup
-                        android:id="@+id/fontGroup"
+                    <LinearLayout
+                        android:id="@+id/fontSeg"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <RadioButton
-                            android:id="@+id/fontSmall"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_52" />
-
-                        <RadioButton
-                            android:id="@+id/fontNormal"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_71" />
-
-                        <RadioButton
-                            android:id="@+id/fontLarge"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_43" />
-
-                        <RadioButton
-                            android:id="@+id/fontXl"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ui_89" />
-                    </RadioGroup>
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal" />
                 </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="4dp"
+                    android:text="动画速度"
+                    android:textColor="?attr/qzText"
+                    android:textSize="15sp" />
+
+                <LinearLayout
+                    android:id="@+id/animSeg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
             </LinearLayout>
 
             <!-- ========== 刷题行为 ========== -->
@@ -421,8 +366,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_card"
-                    android:elevation="2dp"
+                    android:background="@android:color/transparent"
                     android:orientation="vertical"
                     android:padding="14dp">
 
@@ -438,16 +382,19 @@
                             android:text="@string/ui_99"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swAutoNext"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
@@ -457,16 +404,19 @@
                             android:text="@string/ui_103"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swHaptic"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
@@ -476,31 +426,57 @@
                             android:text="@string/ui_98"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swSound"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/btnSoundTest"
-                        android:layout_width="wrap_content"
-                        android:layout_height="30dp"
-                        android:layout_marginTop="6dp"
-                        android:layout_marginEnd="4dp"
-                        android:layout_gravity="end"
-                        android:gravity="center"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp"
-                        android:text="@string/ui_119"
-                        android:textColor="?attr/qzPrimary"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btnReplaceSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_card_ripple"
+                            android:gravity="center"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="替换音效"
+                            android:textColor="?attr/qzPrimary"
+                            android:textSize="13sp" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/btnSoundTest"
+                            android:layout_width="wrap_content"
+                            android:layout_height="30dp"
+                            android:gravity="center"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="@string/ui_119"
+                            android:textColor="?attr/qzPrimary"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
@@ -510,16 +486,19 @@
                             android:text="@string/ui_134"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swShuffle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
@@ -529,16 +508,19 @@
                             android:text="@string/ui_100"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swWrongRemove"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
@@ -548,10 +530,59 @@
                             android:text="@string/ui_96"
                             android:textColor="?attr/qzText"
                             android:textSize="15sp" />
-                        <Switch
+                        <TextView
                             android:id="@+id/swAnalysis"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="专注模式（隐藏统计）"
+                            android:textColor="?attr/qzText"
+                            android:textSize="15sp" />
+                        <TextView
+                            android:id="@+id/swFocus"
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="背题模式显示「自动背题」悬浮球"
+                            android:textColor="?attr/qzText"
+                            android:textSize="15sp" />
+                        <TextView
+                            android:id="@+id/swAutoBall"
+                            android:layout_width="64dp"
+                            android:layout_height="34dp"
+                            android:gravity="center"
+                            android:text="关"
+                            android:textSize="13sp" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -574,7 +605,7 @@
                     android:textColor="?attr/qzPrimary"
                     android:textSize="15sp" />
 
-                <TextView
+                                <TextView
                     android:id="@+id/btnRestoreData"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
@@ -608,7 +639,30 @@
                     android:textColor="?attr/qzRed"
                     android:textSize="15sp"
                     android:visibility="gone" />
-            </LinearLayout>
+            
+
+<LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="生命周期日志"
+                        android:textColor="?attr/qzText"
+                        android:textSize="15sp" />
+                    <TextView
+                        android:id="@+id/swLifecycle"
+                        android:layout_width="64dp"
+                        android:layout_height="34dp"
+                        android:gravity="center"
+                        android:text="开"
+                        android:textSize="13sp" />
+                </LinearLayout>
+                </LinearLayout>
 
             <!-- ========== 重置选项 ========== -->
             <LinearLayout
@@ -625,7 +679,7 @@
                     android:background="@drawable/bg_card_ripple"
                     android:gravity="center"
                     android:text="@string/ui_84"
-                    android:textColor="?attr/qzRed"
+                    android:textColor="?attr/qzPrimary"
                     android:textSize="15sp" />
 
                 <TextView
@@ -636,7 +690,7 @@
                     android:background="@drawable/bg_card_ripple"
                     android:gravity="center"
                     android:text="@string/ui_86"
-                    android:textColor="?attr/qzRed"
+                    android:textColor="?attr/qzPrimary"
                     android:textSize="15sp" />
 
                 <TextView
@@ -647,7 +701,7 @@
                     android:background="@drawable/bg_card_ripple"
                     android:gravity="center"
                     android:text="@string/ui_83"
-                    android:textColor="?attr/qzRed"
+                    android:textColor="?attr/qzPrimary"
                     android:textSize="15sp" />
 
                 <TextView
@@ -658,7 +712,7 @@
                     android:background="@drawable/bg_card_ripple"
                     android:gravity="center"
                     android:text="@string/ui_85"
-                    android:textColor="?attr/qzRed"
+                    android:textColor="?attr/qzPrimary"
                     android:textSize="15sp" />
             </LinearLayout>
 
@@ -683,34 +737,59 @@
                 <TextView android:id="@+id/aboutFork"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
-                    android:text="@string/ui_39"
+                    android:text="基于 lssudi 的紫若灵刷题练习 v1.13.0 二次创作"
+                    android:textColor="?attr/qzText"
+                    android:textSize="13sp" />
+
+                <TextView android:id="@+id/aboutThanks"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:lineSpacingExtra="2dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="感谢 lssudi 的付出与无私贡献，让我有动机与动力完成一个我想做完的应用！"
                     android:textColor="?attr/qzPrimary"
+                    android:textSize="13sp" />
+
+                <TextView android:id="@+id/aboutAuthor2"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:paddingTop="2dp"
+                    android:text="当前开发者：CC(openthedoge)"
+                    android:textColor="?attr/qzTextSub"
                     android:textSize="13sp" />
 
                 <TextView android:id="@+id/aboutUpdates"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/ui_42"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="本版相对原版有多处功能与 UI 的增加与改动，具体可见更新日志"
                     android:textColor="?attr/qzText"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textSize="13sp" />
 
                 <TextView android:id="@+id/aboutChangelogEntry"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:paddingTop="2dp"
-                    android:paddingBottom="2dp"
+                    android:layout_marginTop="14dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
                     android:text="@string/ui_69"
                     android:textColor="?attr/qzPrimary"
-                    android:textSize="13sp" />
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                <TextView android:id="@+id/aboutFeatures"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
                     android:lineSpacingExtra="3dp"
                     android:text="@string/ui_63"
                     android:textColor="?attr/qzTextSub"
+                    android:textSize="13sp" />
+
+                <TextView android:id="@+id/aboutGithub"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="https://github.com/openthedoge/CCexBook"
+                    android:textColor="?attr/qzPrimary"
                     android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>

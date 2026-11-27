@@ -32,18 +32,20 @@ public class SettingsSectionsTest {
         Prefs.init(RuntimeEnvironment.getApplication());
     }
 
-    private ActivityController<SettingsActivity> open() {
-        return Robolectric.buildActivity(SettingsActivity.class).setup();
+    private ActivityController<MainActivity> open() {
+        ActivityController<MainActivity> c = Robolectric.buildActivity(MainActivity.class).setup();
+        c.get().findViewById(R.id.navSettings).performClick();
+        return c;
     }
 
-    private int vis(SettingsActivity a, int id) {
+    private int vis(MainActivity a, int id) {
         return a.findViewById(id).getVisibility();
     }
 
     @Test
     public void menuIsFirstScreenAndOthersHidden() {
-        ActivityController<SettingsActivity> c = open();
-        SettingsActivity a = c.get();
+        ActivityController<MainActivity> c = open();
+        MainActivity a = c.get();
         assertEquals(View.VISIBLE, vis(a, R.id.secMenu));
         assertEquals(View.GONE, vis(a, R.id.secAppearance));
         assertEquals(View.GONE, vis(a, R.id.secBehavior));
@@ -57,14 +59,14 @@ public class SettingsSectionsTest {
 
     @Test
     public void appearanceOpensAsSubPageAndBackReturns() {
-        ActivityController<SettingsActivity> c = open();
-        SettingsActivity a = c.get();
+        ActivityController<MainActivity> c = open();
+        MainActivity a = c.get();
         a.findViewById(R.id.rowAppearance).performClick();
 
         assertEquals(View.GONE, vis(a, R.id.secMenu));
         assertEquals(View.VISIBLE, vis(a, R.id.secAppearance));
         assertEquals("外观", ((TextView) a.findViewById(R.id.titleTv)).getText().toString());
-        assertTrue("主题/配色/字体仍在", a.findViewById(R.id.themeGroup) != null);
+        assertTrue("主题/配色/字体仍在", a.findViewById(R.id.themeSeg) != null);
 
         a.onBackPressed();
         assertEquals(View.VISIBLE, vis(a, R.id.secMenu));
@@ -74,8 +76,8 @@ public class SettingsSectionsTest {
 
     @Test
     public void behaviorDataResetSectionsOpen() {
-        ActivityController<SettingsActivity> c = open();
-        SettingsActivity a = c.get();
+        ActivityController<MainActivity> c = open();
+        MainActivity a = c.get();
 
         a.findViewById(R.id.rowBehavior).performClick();
         assertEquals(View.VISIBLE, vis(a, R.id.secBehavior));
@@ -97,20 +99,21 @@ public class SettingsSectionsTest {
 
     @Test
     public void aboutSectionShowsVersionAndAttribution() {
-        ActivityController<SettingsActivity> c = open();
-        SettingsActivity a = c.get();
+        ActivityController<MainActivity> c = open();
+        MainActivity a = c.get();
 
         assertEquals("关于内容在首屏可见", View.VISIBLE, vis(a, R.id.secAbout));
         String fork = ((TextView) a.findViewById(R.id.aboutFork)).getText().toString();
-        assertTrue("应注明原作者: " + fork, fork.contains("lssudi"));
         assertTrue("应注明基于原版: " + fork, fork.contains("v1.13.0"));
+        String author = ((TextView) a.findViewById(R.id.aboutThanks)).getText().toString();
+        assertTrue("应注明原作者: " + author, author.contains("lssudi"));
         c.destroy();
     }
 
     @Test
     public void subtitlesAreFilled() {
-        ActivityController<SettingsActivity> c = open();
-        SettingsActivity a = c.get();
+        ActivityController<MainActivity> c = open();
+        MainActivity a = c.get();
         String app = ((TextView) a.findViewById(R.id.subAppearance)).getText().toString();
         assertTrue("外观摘要应含主题名: " + app, app.contains("·"));
         c.destroy();

@@ -8,7 +8,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/qzPrimary">
+        android:background="@drawable/bg_topbar">
 
         <TextView
             android:id="@+id/btnBack"
@@ -196,8 +196,28 @@
                     android:textColor="?attr/qzTextSub"
                     android:textSize="12sp" />
             </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:paddingStart="4dp"
+            android:text="最近三次成绩"
+            android:textColor="?attr/qzText"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/examRecent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp" />
+    </LinearLayout>
+</ScrollView>
+
 
     <TextView
         android:id="@+id/btnStart"

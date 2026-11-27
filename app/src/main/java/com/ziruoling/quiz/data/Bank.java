@@ -11,6 +11,12 @@ public class Bank {
     public int doneCount;
     public int correctCount;
     public int recordCount;
+    /** 所属文件夹（0 = 无文件夹） */
+    public long folderId;
+    /** 置顶 */
+    public int pinned;
+    /** 手动排序位置 */
+    public int sortPos;
     /** 已做进度 0..1 */
     public float progress() {
         return questionCount <= 0 ? 0 : Math.min(1f, (float) doneCount / questionCount);

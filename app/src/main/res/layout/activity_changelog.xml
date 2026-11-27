@@ -8,7 +8,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="?attr/qzPrimary"
+        android:background="@drawable/bg_topbar"
         android:elevation="4dp">
 
         <TextView

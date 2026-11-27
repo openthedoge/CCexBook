@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
@@ -48,6 +51,8 @@ public class ChangelogActivity extends BaseActivity {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         final TextView body = findViewById(R.id.body);
+        body.setMovementMethod(LinkMovementMethod.getInstance());
+        body.setHighlightColor(android.graphics.Color.TRANSPARENT);
         body.setText("正在加载…");
 
         new Thread(() -> {
@@ -57,7 +62,9 @@ public class ChangelogActivity extends BaseActivity {
                 if (entries.isEmpty()) {
                     body.setText("暂无更新记录");
                 } else {
-                    body.setText(render(entries));
+                    ChangelogActivity.this.entries = entries;
+                    expanded.add(0);      // 默认只展开最新版本
+                    body.setText(render());
                 }
             });
         }, "changelog-load").start();
@@ -103,21 +110,65 @@ public class ChangelogActivity extends BaseActivity {
         return out;
     }
 
-    /** 条目 → 单个 Spannable（版本行加粗放大、用主色；正文用次要字色） */
-    private CharSequence render(List<Entry> entries) {
+    private List<Entry> entries = new ArrayList<>();
+    private final java.util.Set<Integer> expanded = new java.util.HashSet<>();
+
+    /** 条目内 **文字** 加粗（其余照常） */
+    private void appendItem(SpannableStringBuilder sb, String item, int unused) {
+        int i = 0;
+        boolean bold = false;
+        while (i < item.length()) {
+            int next = item.indexOf("**", i);
+            if (next < 0) {
+                sb.append(item.substring(i));
+                break;
+            }
+            String seg = item.substring(i, next);
+            int start = sb.length();
+            sb.append(seg);
+            if (bold) {
+                sb.setSpan(new StyleSpan(Typeface.BOLD), start, sb.length(),
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            bold = !bold;
+            i = next + 2;
+        }
+    }
+
+    /** 条目 → Spannable；版本行可点击折叠/展开 */
+    private CharSequence render() {
         int accent = Ui.attrColor(this, R.attr.qzPrimary);
         SpannableStringBuilder sb = new SpannableStringBuilder();
-        for (Entry e : entries) {
+        for (int i = 0; i < entries.size(); i++) {
+            Entry e = entries.get(i);
+            final boolean open = expanded.contains(i);
             if (!e.header.isEmpty()) {
                 int start = sb.length();
-                sb.append(e.header).append('\n');
+                sb.append(open ? "▼ " : "▶ ").append(e.header).append('\n');
                 int end = sb.length();
+                final int idx = i;
+                sb.setSpan(new ClickableSpan() {
+                    @Override
+                    public void onClick(android.view.View w) {
+                        if (!expanded.remove(idx)) expanded.add(idx);
+                        ((TextView) w).setText(render());
+                    }
+
+                    @Override
+                    public void updateDrawState(TextPaint ds) {
+                        ds.setUnderlineText(false);
+                    }
+                }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 sb.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 sb.setSpan(new ForegroundColorSpan(accent), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 sb.setSpan(new RelativeSizeSpan(1.12f), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
-            for (String item : e.lines) {
-                sb.append("· ").append(item).append('\n');
+            if (open) {
+                for (String item : e.lines) {
+                    sb.append("· ");
+                    appendItem(sb, item, accent);
+                    sb.append('\n');
+                }
             }
             sb.append('\n');
         }

@@ -1,23 +1,28 @@
-# 签名密钥 (绝对禁止上传)
-*.jks
+﻿# ---- 隐私 / 签名（绝不提交） ----
 *.keystore
-
-# 本地配置 (包含 SDK 路径和签名密码，绝对禁止上传)
+*.jks
+*.p12
+keystore.properties
 local.properties
 
-# 编译产物和缓存
-.gradle/
+# ---- 构建产物 ----
 build/
-app/build/
-captures/
-.externalNativeBuild
-.cxx
-
-# IDE 配置文件
-.idea/
-*.iml
-.DS_Store
-
-# 安装包
+.gradle/
 *.apk
 *.aab
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+local/
+
+# ---- 系统与日志 ----
+.DS_Store
+Thumbs.db
+*.log
+
+# ---- 本地打包 / 交付 ----
+APK/
+交付/
+_snapshot/

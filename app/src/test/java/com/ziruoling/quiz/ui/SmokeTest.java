@@ -97,10 +97,10 @@ public class SmokeTest {
     @Test
     public void uiPolishStyles() {
         MainActivity a = Robolectric.buildActivity(MainActivity.class).setup().get();
-        assertTrue("导入按钮应为波纹背景",
-                a.findViewById(R.id.btnImport).getBackground() instanceof android.graphics.drawable.RippleDrawable);
-        assertTrue("快捷入口应为胶囊波纹背景",
-                a.findViewById(R.id.quickWrong).getBackground() instanceof android.graphics.drawable.RippleDrawable);
+        assertTrue("导入按钮应可点击",
+                a.findViewById(R.id.btnImport).hasOnClickListeners());
+        assertTrue("收藏夹入口应可点击",
+                a.findViewById(R.id.quickFav).hasOnClickListeners());
         assertNotNull("空状态应有图标", a.findViewById(R.id.emptyIcon));
         assertEquals("无题库时空状态图标应可见", View.VISIBLE, a.findViewById(R.id.emptyIcon).getVisibility());
         android.content.Context themed =
@@ -197,6 +197,61 @@ public class SmokeTest {
     }
 
     @Test
+    public void noteCardOnlyAfterAnswered() {
+        long bankId = seedBank();
+        List<Long> ids = Db.questionIds(bankId);
+        PracticeActivity a = Robolectric.buildActivity(PracticeActivity.class,
+                new Intent(app(), PracticeActivity.class)
+                        .putExtra("ids", arr(ids))
+                        .putExtra("start", 0)
+                        .putExtra("mode", PracticeActivity.MODE_PRACTICE)
+                        .putExtra("bank", bankId)
+                        .putExtra("title", "顺序练习")
+                        .putExtra("progress", true)).setup().get();
+
+        android.view.View noteCard = a.findViewById(R.id.noteCard);
+        assertEquals("未作答时不应出现笔记区", View.GONE, noteCard.getVisibility());
+
+        LinearLayout options = a.findViewById(R.id.options);
+        options.getChildAt(0).performClick();
+        assertEquals("作答后应出现笔记区", View.VISIBLE, noteCard.getVisibility());
+
+        a.findViewById(R.id.btnNext).performClick();
+        assertEquals("下一题未作答，笔记区应隐藏", View.GONE, noteCard.getVisibility());
+    }
+
+    @Test
+    public void reciteAutoBallVisible() {
+        Prefs.autoReciteBall(true);
+        long bankId = seedBank();
+        List<Long> ids = Db.questionIds(bankId);
+        PracticeActivity a = Robolectric.buildActivity(PracticeActivity.class,
+                new Intent(app(), PracticeActivity.class)
+                        .putExtra("ids", arr(ids))
+                        .putExtra("start", 0)
+                        .putExtra("mode", PracticeActivity.MODE_RECITE)
+                        .putExtra("bank", bankId)
+                        .putExtra("title", "背题模式")).setup().get();
+        assertNotNull("背题模式应显示自动背题悬浮球",
+                findByText(a.getWindow().getDecorView(), "自动"));
+    }
+
+    private View findByText(View v, String text) {
+        if (v instanceof TextView) {
+            CharSequence cs = ((TextView) v).getText();
+            if (cs != null && text.contentEquals(cs)) return v;
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                View r = findByText(g.getChildAt(i), text);
+                if (r != null) return r;
+            }
+        }
+        return null;
+    }
+
+    @Test
     public void practiceReciteMode() {
         long bankId = seedBank();
         List<Long> ids = Db.questionIds(bankId);
@@ -210,20 +265,23 @@ public class SmokeTest {
                         .putExtra("progress", false)).setup().get();
         // 背题模式不写记录
         assertEquals(0, Db.globalStats()[0]);
-        // 答案默认隐藏；点「显示答案」后显隐状态全局记忆，换题保持
+        // 答案、解析直接显示，不再需要「显示答案」
         TextView reveal = a.findViewById(R.id.btnReveal);
         TextView answerTv = a.findViewById(R.id.answerTv);
         assertNotNull(reveal);
-        assertEquals(View.VISIBLE, reveal.getVisibility());
-        assertEquals(View.GONE, answerTv.getVisibility());
-        reveal.performClick();
-        assertEquals(View.VISIBLE, answerTv.getVisibility());
+        assertEquals("背题模式不再显示展开按钮", View.GONE, reveal.getVisibility());
+        assertEquals("答案直接可见", View.VISIBLE, answerTv.getVisibility());
+        assertEquals(View.VISIBLE, a.findViewById(R.id.analysisCard).getVisibility());
+        // 笔记区在背题模式也可见
+        assertEquals(View.VISIBLE, a.findViewById(R.id.noteCard).getVisibility());
+        // 背题进度独立：不写顺序进度，写自己的「已看」
+        assertEquals("背题不应改写顺序进度", 0, Db.getProgress(bankId));
+        assertTrue("应记录已看", Db.reciteSeenCount(bankId) > 0);
+        long recitePos = Db.getReciteProgress(bankId);
+        assertTrue("应记录背题进度", recitePos > 0);
         a.findViewById(R.id.btnNext).performClick();
-        assertEquals("显示后换题仍显示", View.VISIBLE, answerTv.getVisibility());
-        reveal.performClick();
-        assertEquals(View.GONE, answerTv.getVisibility());
-        a.findViewById(R.id.btnNext).performClick();
-        assertEquals("隐藏后换题仍隐藏", View.GONE, answerTv.getVisibility());
+        assertTrue("切题后背题进度应前进", recitePos != Db.getReciteProgress(bankId));
+        assertEquals("顺序进度仍不应被改写", 0, Db.getProgress(bankId));
     }
 
     /** 背题固定乱序：同种子顺序稳定（续做位置有效）、异种子顺序不同、集合不丢不重 */
@@ -338,7 +396,6 @@ public class SmokeTest {
         target.performClick();
         AlertDialog d = ShadowAlertDialog.getLatestAlertDialog();
         assertNotNull(d);
-        // 开始方式改成了列表：从上次继续 / 重新开始 / 自定义起始题号
         android.widget.ListView lv = d.getListView();
         int pos = -1;
         for (int i = 0; i < lv.getAdapter().getCount(); i++) {
@@ -349,7 +406,6 @@ public class SmokeTest {
         }
         assertTrue("有进度时应提供「从上次继续」", pos >= 0);
         lv.performItemClick(null, pos, pos);
-        // Robolectric 下对话框按钮经 Handler 异步派发，先跑完主线程队列
         Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
         Intent next = Shadows.shadowOf(a).getNextStartedActivity();
         assertNotNull(next);
@@ -498,23 +554,32 @@ public class SmokeTest {
     public void settingsLaunch() {
         // 断言中文文案：测试机默认英文环境时先固定为中文
         com.ziruoling.quiz.data.Prefs.language(com.ziruoling.quiz.data.Prefs.LANG_ZH);
-        SettingsActivity a = Robolectric.buildActivity(SettingsActivity.class).setup().get();
-        assertNotNull(a.findViewById(R.id.themeGroup));
+        MainActivity ma = Robolectric.buildActivity(MainActivity.class).setup().get();
+        ma.findViewById(R.id.navSettings).performClick();
+        MainActivity a = ma;
+        assertNotNull(a.findViewById(R.id.themeSeg));
         assertNotNull(a.findViewById(R.id.swAutoNext));
         // 关于卡片：版本号运行时读取，应带上 fork 后缀，且注明基于哪个原版修改、由谁修改
         TextView about = a.findViewById(R.id.aboutVersion);
         assertNotNull(about);
         String text = about.getText().toString();
-        assertTrue("版本号应取自 versionName: " + text, text.contains("1.6."));
+        String vn;
+        try {
+            vn = a.getPackageManager().getPackageInfo(a.getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            vn = "1.";
+        }
+        assertTrue("版本号应取自 versionName: " + text, text.contains(vn));
         TextView fork = a.findViewById(R.id.aboutFork);
         assertNotNull(fork);
         String forkText = fork.getText().toString();
-        assertTrue("应注明原版版本: " + forkText, forkText.contains("v1.13.0"));
-        assertTrue("应注明原作者: " + forkText, forkText.contains("lssudi"));
-        assertTrue("应注明修改者: " + forkText, forkText.contains("CC"));
+        assertTrue("应注明基于原版: " + forkText, forkText.contains("v1.13.0"));
+        TextView author = a.findViewById(R.id.aboutThanks);
+        assertNotNull(author);
+        assertTrue("应注明原作者: " + author.getText(), author.getText().toString().contains("lssudi"));
 
         // 彩蛋：点「基于原版…」弹「题库已清空」，但不做任何数据操作
-        fork.performClick();
+        author.performClick();
         AlertDialog dlg = ShadowAlertDialog.getLatestAlertDialog();
         assertNotNull("应弹出彩蛋提示", dlg);
         String msg = ((android.widget.TextView) dlg.findViewById(android.R.id.message)) == null
@@ -528,7 +593,8 @@ public class SmokeTest {
         // 更新日志已移到独立页面：关于页只保留一行入口
         TextView updates = a.findViewById(R.id.aboutUpdates);
         assertNotNull(updates);
-        assertEquals("多处功能增加与改动", updates.getText().toString());
+        assertTrue("关于页应有改版说明，实际：" + updates.getText(),
+                updates.getText().toString().contains("本版相对原版有多处功能与 UI"));
         TextView entry = a.findViewById(R.id.aboutChangelogEntry);
         assertNotNull("应有查看以往更新内容的入口", entry);
         assertTrue(entry.getText().toString().contains("查看以往更新内容"));
@@ -536,16 +602,43 @@ public class SmokeTest {
 
     /** 音效开关：默认开启，切换实时写入设置 */
     @Test
+    public void styledDialogAppliesRoundedBackground() {
+        Prefs.theme(Prefs.THEME_LIGHT);
+        MainActivity a = Robolectric.buildActivity(MainActivity.class).setup().get();
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(a)
+                .setTitle("标题")
+                .setItems(new String[]{"一", "二"}, (d, w) -> { })
+                .setNegativeButton("取消", null)
+                .show();
+        android.app.AlertDialog d = ShadowAlertDialog.getLatestAlertDialog();
+        assertNotNull(d);
+        android.graphics.drawable.Drawable bg = d.getWindow().getDecorView().getBackground();
+        assertTrue("弹窗应使用圆角背景，实际：" + bg,
+                bg instanceof android.graphics.drawable.GradientDrawable);
+        int titleId = a.getResources().getIdentifier("alertTitle", "id", "android");
+        if (titleId != 0) {
+            TextView t = d.findViewById(titleId);
+            assertNotNull(t);
+            assertEquals("标题应为主题色",
+                    com.ziruoling.quiz.util.Ui.attrColor(a, R.attr.qzPrimary),
+                    t.getCurrentTextColor());
+        }
+    }
+
+    @Test
     public void settingsSoundToggle() {
-        SettingsActivity a = Robolectric.buildActivity(SettingsActivity.class).setup().get();
-        Switch sw = a.findViewById(R.id.swSound);
+        MainActivity ma = Robolectric.buildActivity(MainActivity.class).setup().get();
+        ma.findViewById(R.id.navSettings).performClick();
+        MainActivity a = ma;
+        TextView sw = a.findViewById(R.id.swSound);
         assertNotNull(sw);
-        assertTrue(sw.isChecked());
-        assertTrue(Prefs.sound());
-        sw.setChecked(false);
-        assertFalse(Prefs.sound());
-        sw.setChecked(true);
-        assertTrue(Prefs.sound());
+        assertTrue("默认开启", Prefs.sound());
+        assertEquals("开", sw.getText().toString());
+        sw.performClick();
+        assertFalse("点一次应关闭", Prefs.sound());
+        assertEquals("关", sw.getText().toString());
+        sw.performClick();
+        assertTrue("再点应开启", Prefs.sound());
         // 试听音效按钮：点击立即+延迟播放不崩溃（真机出声，JVM 为空操作）
         TextView btnTest = a.findViewById(R.id.btnSoundTest);
         assertNotNull(btnTest);

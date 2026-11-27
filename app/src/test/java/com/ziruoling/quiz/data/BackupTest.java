@@ -58,7 +58,7 @@ public class BackupTest {
         assertTrue("导出的备份应非空", zip.length() > 0);
 
         Backup.Info info = Backup.inspect(zip);
-        assertEquals("数据库版本", 7, info.dbVersion);
+        assertEquals("数据库版本", 13, info.dbVersion);
         assertEquals(1, info.banks);
         assertEquals(37, info.questions);
         assertEquals(1, info.records);

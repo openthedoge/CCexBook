@@ -2,6 +2,8 @@
 <resources>
 
     <style name="AppTheme.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Light</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Light</item>
         <item name="android:colorPrimary">@color/primaryLight</item>
         <item name="android:colorPrimaryDark">@color/primaryDarkLight</item>
         <item name="android:colorAccent">@color/primaryLight</item>
@@ -31,6 +33,8 @@
     </style>
 
     <style name="AppTheme.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Dark</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Dark</item>
         <item name="android:colorPrimary">@color/primaryDark</item>
         <item name="android:colorPrimaryDark">@color/statusBarDark</item>
         <item name="android:colorAccent">@color/primaryDark</item>
@@ -62,6 +66,8 @@
     <!-- ================= 多主题配色（红 / 绿 / 橙 / 紫） ================= -->
 
     <style name="AppTheme.Red.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Red.Light</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Red.Light</item>
         <item name="android:colorPrimary">@color/primaryRedLight</item>
         <item name="android:colorPrimaryDark">@color/statusRedLight</item>
         <item name="android:colorAccent">@color/primaryRedLight</item>
@@ -91,6 +97,8 @@
     </style>
 
     <style name="AppTheme.Red.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Red.Dark</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Red.Dark</item>
         <item name="android:colorPrimary">@color/primaryRedDark</item>
         <item name="android:colorPrimaryDark">@color/statusRedDark</item>
         <item name="android:colorAccent">@color/primaryRedDark</item>
@@ -120,6 +128,8 @@
     </style>
 
     <style name="AppTheme.Green.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Green.Light</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Green.Light</item>
         <item name="android:colorPrimary">@color/primaryGreenLight</item>
         <item name="android:colorPrimaryDark">@color/statusGreenLight</item>
         <item name="android:colorAccent">@color/primaryGreenLight</item>
@@ -149,6 +159,8 @@
     </style>
 
     <style name="AppTheme.Green.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Green.Dark</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Green.Dark</item>
         <item name="android:colorPrimary">@color/primaryGreenDark</item>
         <item name="android:colorPrimaryDark">@color/statusGreenDark</item>
         <item name="android:colorAccent">@color/primaryGreenDark</item>
@@ -178,6 +190,8 @@
     </style>
 
     <style name="AppTheme.Orange.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Orange.Light</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Orange.Light</item>
         <item name="android:colorPrimary">@color/primaryOrangeLight</item>
         <item name="android:colorPrimaryDark">@color/statusOrangeLight</item>
         <item name="android:colorAccent">@color/primaryOrangeLight</item>
@@ -207,6 +221,8 @@
     </style>
 
     <style name="AppTheme.Orange.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Orange.Dark</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Orange.Dark</item>
         <item name="android:colorPrimary">@color/primaryOrangeDark</item>
         <item name="android:colorPrimaryDark">@color/statusOrangeDark</item>
         <item name="android:colorAccent">@color/primaryOrangeDark</item>
@@ -236,6 +252,8 @@
     </style>
 
     <style name="AppTheme.Purple.Light" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Purple.Light</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Purple.Light</item>
         <item name="android:colorPrimary">@color/primaryPurpleLight</item>
         <item name="android:colorPrimaryDark">@color/statusPurpleLight</item>
         <item name="android:colorAccent">@color/primaryPurpleLight</item>
@@ -265,6 +283,8 @@
     </style>
 
     <style name="AppTheme.Purple.Dark" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Purple.Dark</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Purple.Dark</item>
         <item name="android:colorPrimary">@color/primaryPurpleDark</item>
         <item name="android:colorPrimaryDark">@color/statusPurpleDark</item>
         <item name="android:colorAccent">@color/primaryPurpleDark</item>
@@ -296,35 +316,39 @@
     <!-- ================= 纯黑（AMOLED）主题：5 配色 × 纯黑 ================= -->
 
     <style name="AppTheme.Black" parent="android:Theme.Material.NoActionBar">
-        <item name="android:colorPrimary">@color/primaryDark</item>
-        <item name="android:colorPrimaryDark">@color/statusBarDark</item>
-        <item name="android:colorAccent">@color/primaryDark</item>
+        <item name="android:popupMenuStyle">@style/QzPopup.Black</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Black</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:colorPrimaryDark">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
         <item name="android:windowBackground">@color/blackBg</item>
         <item name="android:colorBackground">@color/blackBg</item>
-        <item name="android:statusBarColor">@color/statusBarDark</item>
+        <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">@color/blackBg</item>
         <item name="android:textColorPrimary">@color/blackText</item>
         <item name="android:textColorSecondary">@color/blackTextSub</item>
 
-        <item name="qzPrimary">@color/primaryDark</item>
+        <item name="qzPrimary">#9AA0A6</item>
         <item name="qzBg">@color/blackBg</item>
         <item name="qzSurface">@color/blackSurface</item>
         <item name="qzChipBg">@color/blackChipBg</item>
         <item name="qzText">@color/blackText</item>
         <item name="qzTextSub">@color/blackTextSub</item>
         <item name="qzDivider">@color/blackDivider</item>
-        <item name="qzGreen">@color/greenDark</item>
-        <item name="qzGreenBg">@color/greenBgDark</item>
-        <item name="qzRed">@color/redDark</item>
-        <item name="qzRedBg">@color/redBgDark</item>
-        <item name="qzOrange">@color/orangeDark</item>
-        <item name="qzOrangeBg">@color/orangeBgDark</item>
-        <item name="qzPrimaryBg">@color/primaryBgDark</item>
+        <item name="qzGreen">#7FB08C</item>
+        <item name="qzGreenBg">#16221A</item>
+        <item name="qzRed">#B98A86</item>
+        <item name="qzRedBg">#231717</item>
+        <item name="qzOrange">#BFA382</item>
+        <item name="qzOrangeBg">#241F17</item>
+        <item name="qzPrimaryBg">#1C1C1C</item>
         <item name="qzStroke">@color/blackStroke</item>
         <item name="qzOnPrimary">#0A0A0A</item>
     </style>
 
     <style name="AppTheme.Red.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Red.Black</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Red.Black</item>
         <item name="android:colorPrimary">@color/primaryRedDark</item>
         <item name="android:colorPrimaryDark">@color/statusRedDark</item>
         <item name="android:colorAccent">@color/primaryRedDark</item>
@@ -354,6 +378,8 @@
     </style>
 
     <style name="AppTheme.Green.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Green.Black</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Green.Black</item>
         <item name="android:colorPrimary">@color/primaryGreenDark</item>
         <item name="android:colorPrimaryDark">@color/statusGreenDark</item>
         <item name="android:colorAccent">@color/primaryGreenDark</item>
@@ -383,6 +409,8 @@
     </style>
 
     <style name="AppTheme.Orange.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Orange.Black</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Orange.Black</item>
         <item name="android:colorPrimary">@color/primaryOrangeDark</item>
         <item name="android:colorPrimaryDark">@color/statusOrangeDark</item>
         <item name="android:colorAccent">@color/primaryOrangeDark</item>
@@ -412,6 +440,8 @@
     </style>
 
     <style name="AppTheme.Purple.Black" parent="android:Theme.Material.NoActionBar">
+        <item name="android:popupMenuStyle">@style/QzPopup.Purple.Black</item>
+        <item name="android:alertDialogTheme">@style/QzDialog.Purple.Black</item>
         <item name="android:colorPrimary">@color/primaryPurpleDark</item>
         <item name="android:colorPrimaryDark">@color/statusPurpleDark</item>
         <item name="android:colorAccent">@color/primaryPurpleDark</item>
@@ -440,4 +470,250 @@
         <item name="qzOnPrimary">#0A0A0A</item>
     </style>
 
+
+    <style name="QzDialog.Light" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceLight</item>
+        <item name="android:colorAccent">@color/primaryLight</item>
+        <item name="android:colorPrimary">@color/primaryLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceLight</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlueLight</item>
+    </style>
+
+    <style name="QzDialog.Red.Light" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceLight</item>
+        <item name="android:colorAccent">@color/primaryRedLight</item>
+        <item name="android:colorPrimary">@color/primaryRedLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceLight</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemRedLight</item>
+    </style>
+
+    <style name="QzDialog.Green.Light" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceLight</item>
+        <item name="android:colorAccent">@color/primaryGreenLight</item>
+        <item name="android:colorPrimary">@color/primaryGreenLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceLight</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemGreenLight</item>
+    </style>
+
+    <style name="QzDialog.Orange.Light" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceLight</item>
+        <item name="android:colorAccent">@color/primaryOrangeLight</item>
+        <item name="android:colorPrimary">@color/primaryOrangeLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceLight</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemOrangeLight</item>
+    </style>
+
+    <style name="QzDialog.Purple.Light" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceLight</item>
+        <item name="android:colorAccent">@color/primaryPurpleLight</item>
+        <item name="android:colorPrimary">@color/primaryPurpleLight</item>
+        <item name="android:textColorPrimary">@color/textLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceLight</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemPurpleLight</item>
+    </style>
+
+    <style name="QzDialog.Dark" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceDark</item>
+        <item name="android:colorAccent">@color/primaryDark</item>
+        <item name="android:colorPrimary">@color/primaryDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceDark</item>
+        <item name="android:textColorAlertDialogListItem">@color/primaryDark</item>
+    </style>
+
+    <style name="QzDialog.Red.Dark" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceDark</item>
+        <item name="android:colorAccent">@color/primaryRedDark</item>
+        <item name="android:colorPrimary">@color/primaryRedDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceDark</item>
+        <item name="android:textColorAlertDialogListItem">@color/primaryRedDark</item>
+    </style>
+
+    <style name="QzDialog.Green.Dark" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceDark</item>
+        <item name="android:colorAccent">@color/primaryGreenDark</item>
+        <item name="android:colorPrimary">@color/primaryGreenDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceDark</item>
+        <item name="android:textColorAlertDialogListItem">@color/primaryGreenDark</item>
+    </style>
+
+    <style name="QzDialog.Orange.Dark" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceDark</item>
+        <item name="android:colorAccent">@color/primaryOrangeDark</item>
+        <item name="android:colorPrimary">@color/primaryOrangeDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceDark</item>
+        <item name="android:textColorAlertDialogListItem">@color/primaryOrangeDark</item>
+    </style>
+
+    <style name="QzDialog.Purple.Dark" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">@color/surfaceDark</item>
+        <item name="android:colorAccent">@color/primaryPurpleDark</item>
+        <item name="android:colorPrimary">@color/primaryPurpleDark</item>
+        <item name="android:textColorPrimary">@color/textDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+        <item name="android:colorBackgroundFloating">@color/surfaceDark</item>
+        <item name="android:textColorAlertDialogListItem">@color/primaryPurpleDark</item>
+    </style>
+
+    <style name="QzDialog.Black" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:textColorPrimary">#E6E6E6</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+        <item name="android:colorBackgroundFloating">#000000</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlack</item>
+    </style>
+
+    <style name="QzDialog.Red.Black" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:textColorPrimary">#E6E6E6</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+        <item name="android:colorBackgroundFloating">#000000</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlack</item>
+    </style>
+
+    <style name="QzDialog.Green.Black" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:textColorPrimary">#E6E6E6</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+        <item name="android:colorBackgroundFloating">#000000</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlack</item>
+    </style>
+
+    <style name="QzDialog.Orange.Black" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:textColorPrimary">#E6E6E6</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+        <item name="android:colorBackgroundFloating">#000000</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlack</item>
+    </style>
+
+    <style name="QzDialog.Purple.Black" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:colorAccent">#9AA0A6</item>
+        <item name="android:colorPrimary">#9AA0A6</item>
+        <item name="android:textColorPrimary">#E6E6E6</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+        <item name="android:colorBackgroundFloating">#000000</item>
+        <item name="android:textColorAlertDialogListItem">@color/dialogItemBlack</item>
+    </style>
+    <style name="QzPopup.Light" parent="android:Widget.Material.Light.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceLight</item>
+        <item name="android:textColorPrimary">@color/primaryLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+    </style>
+    <style name="QzPopup.Dark" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceDark</item>
+        <item name="android:textColorPrimary">@color/primaryDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+    </style>
+    <style name="QzPopup.Black" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">#000000</item>
+        <item name="android:textColorPrimary">@color/dialogItemBlack</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+    </style>
+    <style name="QzPopup.Red.Light" parent="android:Widget.Material.Light.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceLight</item>
+        <item name="android:textColorPrimary">@color/primaryRedLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+    </style>
+    <style name="QzPopup.Red.Dark" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceDark</item>
+        <item name="android:textColorPrimary">@color/primaryRedDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+    </style>
+    <style name="QzPopup.Red.Black" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">#000000</item>
+        <item name="android:textColorPrimary">@color/dialogItemBlack</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+    </style>
+    <style name="QzPopup.Green.Light" parent="android:Widget.Material.Light.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceLight</item>
+        <item name="android:textColorPrimary">@color/primaryGreenLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+    </style>
+    <style name="QzPopup.Green.Dark" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceDark</item>
+        <item name="android:textColorPrimary">@color/primaryGreenDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+    </style>
+    <style name="QzPopup.Green.Black" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">#000000</item>
+        <item name="android:textColorPrimary">@color/dialogItemBlack</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+    </style>
+    <style name="QzPopup.Orange.Light" parent="android:Widget.Material.Light.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceLight</item>
+        <item name="android:textColorPrimary">@color/primaryOrangeLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+    </style>
+    <style name="QzPopup.Orange.Dark" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceDark</item>
+        <item name="android:textColorPrimary">@color/primaryOrangeDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+    </style>
+    <style name="QzPopup.Orange.Black" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">#000000</item>
+        <item name="android:textColorPrimary">@color/dialogItemBlack</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+    </style>
+    <style name="QzPopup.Purple.Light" parent="android:Widget.Material.Light.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceLight</item>
+        <item name="android:textColorPrimary">@color/primaryPurpleLight</item>
+        <item name="android:textColorSecondary">@color/textSubLight</item>
+    </style>
+    <style name="QzPopup.Purple.Dark" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">@color/surfaceDark</item>
+        <item name="android:textColorPrimary">@color/primaryPurpleDark</item>
+        <item name="android:textColorSecondary">@color/textSubDark</item>
+    </style>
+    <style name="QzPopup.Purple.Black" parent="android:Widget.Material.PopupMenu">
+        <item name="android:popupBackground">#000000</item>
+        <item name="android:textColorPrimary">@color/dialogItemBlack</item>
+        <item name="android:textColorSecondary">#8A8A8A</item>
+    </style>
+
+    <!-- 弹窗动画：快 / 中 / 慢 / 关 -->
+    <style name="QzAnimFast">
+        <item name="android:windowEnterAnimation">@anim/qz_dialog_in_fast</item>
+        <item name="android:windowExitAnimation">@anim/qz_dialog_out_fast</item>
+    </style>
+
+    <style name="QzAnimMid">
+        <item name="android:windowEnterAnimation">@anim/qz_dialog_in_mid</item>
+        <item name="android:windowExitAnimation">@anim/qz_dialog_out_mid</item>
+    </style>
+
+    <style name="QzAnimSlow">
+        <item name="android:windowEnterAnimation">@anim/qz_dialog_in_slow</item>
+        <item name="android:windowExitAnimation">@anim/qz_dialog_out_slow</item>
+    </style>
+
+    <style name="QzAnimNone">
+        <item name="android:windowEnterAnimation">@null</item>
+        <item name="android:windowExitAnimation">@null</item>
+    </style>
 </resources>

@@ -43,16 +43,41 @@ public class ExamConfigActivity extends BaseActivity {
         counts = Db.typeCounts(bankId);
         totalTv = findViewById(R.id.totalTv);
         fullTv = findViewById(R.id.fullTv);
+        TextView fullNote = Ui.text(this, "（填空按实际空数，多选部分分另计）",
+                11, R.attr.qzTextSub, 0);
+        if (fullTv != null && fullTv.getParent() instanceof android.view.ViewGroup) {
+            ((android.view.ViewGroup) fullTv.getParent()).addView(fullNote);
+        }
         minutes = findViewById(R.id.minutes);
         shuffle = findViewById(R.id.shuffle);
         shuffle.setChecked(Prefs.shuffleOpts());
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnAutoMix).setOnClickListener(v -> autoMix());
+        fillRecentExams();
         findViewById(R.id.btnStart).setOnClickListener(v -> startExam());
 
         buildRows();
         updateTotal();
+    }
+
+    private void fillRecentExams() {
+        android.widget.LinearLayout box = findViewById(R.id.examRecent);
+        if (box == null) return;
+        box.removeAllViews();
+        java.util.List<com.ziruoling.quiz.data.ExamRecord> exams = Db.listExams(3);
+        if (exams.isEmpty()) {
+            box.addView(Ui.text(this, "暂无考试记录", 13, R.attr.qzTextSub, 0));
+            return;
+        }
+        for (com.ziruoling.quiz.data.ExamRecord e : exams) {
+            android.widget.TextView row = Ui.text(this,
+                    Ui.fmtTime(e.finishedAt) + "  " + e.name + "   "
+                            + Math.round(e.score) + " / " + Math.round(e.full),
+                    13, R.attr.qzText, 0);
+            row.setPadding(0, Ui.dp(this, 4), 0, 0);
+            box.addView(row);
+        }
     }
 
     private void buildRows() {
@@ -116,6 +141,86 @@ public class ExamConfigActivity extends BaseActivity {
                 pointRows.addView(prow);
                 pointEds[t] = pe;
             }
+        }
+        addScoreExtras(pointRows);
+    }
+
+    private EditText blankScoreEt;
+    private EditText partialEt;
+    private boolean resetPartialOnce;
+
+    private void addScoreExtras(LinearLayout pointRows) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, Ui.dp(this, 6), 0, 0);
+        row.addView(Ui.text(this, "填空每空", 14, R.attr.qzTextSub, 0));
+        blankScoreEt = new EditText(this);
+        blankScoreEt.setText(String.valueOf(Prefs.examBlankScore()));
+        blankScoreEt.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        blankScoreEt.setGravity(Gravity.CENTER);
+        blankScoreEt.setTextSize(14);
+        blankScoreEt.setTextColor(Ui.attrColor(this, R.attr.qzText));
+        blankScoreEt.setBackground(Ui.bgStroke(this, Ui.attrColor(this, R.attr.qzSurface),
+                Ui.attrColor(this, R.attr.qzStroke), Ui.dp(this, 8)));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 56), Ui.dp(this, 38));
+        lp.leftMargin = Ui.dp(this, 8);
+        blankScoreEt.setLayoutParams(lp);
+        blankScoreEt.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            public void afterTextChanged(android.text.Editable s) {
+                try {
+                    int v = Integer.parseInt(s.toString().trim());
+                    if (v > 0) Prefs.examBlankScore(v);
+                } catch (Exception ignored) {}
+            }
+        });
+        row.addView(blankScoreEt);
+        row.addView(Ui.text(this, "分/空", 12, R.attr.qzTextSub, 0));
+        pointRows.addView(row);
+
+        LinearLayout r2 = new LinearLayout(this);
+        r2.setOrientation(LinearLayout.HORIZONTAL);
+        r2.setGravity(Gravity.CENTER_VERTICAL);
+        r2.setPadding(0, Ui.dp(this, 6), 0, 0);
+        r2.addView(Ui.text(this, "多选未全对", 14, R.attr.qzTextSub, 0));
+        partialEt = new EditText(this);
+        partialEt.setText(String.valueOf(Prefs.examPartialPercent()));
+        partialEt.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        partialEt.setGravity(Gravity.CENTER);
+        partialEt.setTextSize(14);
+        partialEt.setTextColor(Ui.attrColor(this, R.attr.qzText));
+        partialEt.setBackground(Ui.bgStroke(this, Ui.attrColor(this, R.attr.qzSurface),
+                Ui.attrColor(this, R.attr.qzStroke), Ui.dp(this, 8)));
+        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(Ui.dp(this, 56), Ui.dp(this, 38));
+        lp2.leftMargin = Ui.dp(this, 8);
+        partialEt.setLayoutParams(lp2);
+        partialEt.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            public void afterTextChanged(android.text.Editable s) {
+                try {
+                    int v = Integer.parseInt(s.toString().trim());
+                    if (v >= 0 && v <= 100) Prefs.examPartialPercent(v);
+                } catch (Exception ignored) {}
+            }
+        });
+        r2.addView(partialEt);
+        r2.addView(Ui.text(this, "% 得分", 12, R.attr.qzTextSub, 0));
+        pointRows.addView(r2);
+
+        // 改「多选每题分值」时，部分分比例重置回 50%
+        if (pointEds[QuestionType.MULTI] != null && !resetPartialOnce) {
+            resetPartialOnce = true;
+            pointEds[QuestionType.MULTI].addTextChangedListener(new android.text.TextWatcher() {
+                public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+                public void onTextChanged(CharSequence s, int a, int b, int c) {}
+                public void afterTextChanged(android.text.Editable s) {
+                    Prefs.examPartialPercent(50);
+                    partialEt.setText("50");
+                }
+            });
         }
     }
 

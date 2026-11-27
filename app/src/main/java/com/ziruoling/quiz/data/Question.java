@@ -21,4 +21,6 @@ public class Question {
     public int docNo;
     /** 题干配图（相对路径，如 imgs/q1_0.png；docx 表格内嵌图，看图题/配图题通用） */
     public List<String> imgPaths = new ArrayList<>();
+    /** 纯图题：无文字题干，选项只有字母 */
+    public boolean imageOnly;
 }

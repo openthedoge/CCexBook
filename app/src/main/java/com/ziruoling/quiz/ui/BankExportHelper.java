@@ -14,6 +14,38 @@ final class BankExportHelper {
 
     private BankExportHelper() {}
 
+    /**
+     * 导出文件名过滤：非法字符 \ / : * ? " &lt; &gt; | 与控制字符替换为 {@code _}，
+     * 去掉首尾空白/点，空名回退「题库」。
+     */
+    static String safeFileName(String raw, String ext) {
+        String s = raw == null ? "" : raw;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch == '\\' || ch == '/' || ch == ':' || ch == '*' || ch == '?'
+                    || ch == '"' || ch == '<' || ch == '>' || ch == '|'
+                    || Character.isISOControl(ch)) {
+                sb.append('_');
+            } else {
+                sb.append(ch);
+            }
+        }
+        String name = sb.toString();
+        int start = 0;
+        int end = name.length();
+        while (start < end && isTrimmedChar(name.charAt(start))) start++;
+        while (end > start && isTrimmedChar(name.charAt(end - 1))) end--;
+        name = name.substring(start, end);
+        if (name.isEmpty()) name = "题库";
+        return name + ext;
+    }
+
+    /** 首尾需要去掉的字符：空白与点 */
+    private static boolean isTrimmedChar(char ch) {
+        return Character.isWhitespace(ch) || Character.isSpaceChar(ch) || ch == '.';
+    }
+
     /** 读题库 + 图片字节，组装成 docx 导出用的题目列表（可能较慢，请在后台线程调用） */
     static List<DocxWriter.PaperQ> paperQs(long bankId) {
         List<DocxWriter.PaperQ> out = new ArrayList<>();

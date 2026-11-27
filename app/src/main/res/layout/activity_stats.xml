@@ -8,7 +8,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/qzPrimary">
+        android:background="@drawable/bg_topbar">
 
         <TextView
             android:id="@+id/btnBack"
@@ -196,39 +196,6 @@
                 android:background="?attr/qzSurface"
                 android:orientation="vertical"
                 android:padding="14dp" />
-
-            <TextView
-                android:id="@+id/btnClear"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_card_ripple"
-                android:gravity="center"
-                android:text="@string/ui_84"
-                android:textColor="?attr/qzRed"
-                android:textSize="15sp" />
-
-            <TextView
-                android:id="@+id/btnClearWrong"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card_ripple"
-                android:gravity="center"
-                android:text="@string/ui_86"
-                android:textColor="?attr/qzRed"
-                android:textSize="15sp" />
-
-            <TextView
-                android:id="@+id/btnClearFav"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card_ripple"
-                android:gravity="center"
-                android:text="@string/ui_83"
-                android:textColor="?attr/qzRed"
-                android:textSize="15sp" />
-        </LinearLayout>
+</LinearLayout>
     </ScrollView>
 </LinearLayout>

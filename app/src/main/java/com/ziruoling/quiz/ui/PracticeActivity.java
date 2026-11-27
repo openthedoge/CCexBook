@@ -1,12 +1,15 @@
 package com.ziruoling.quiz.ui;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.util.SparseArray;
 import android.view.GestureDetector;
@@ -34,6 +37,7 @@ import com.ziruoling.quiz.ui.dialog.ConfirmDialog;
 import com.ziruoling.quiz.ui.dialog.InputDialog;
 import com.ziruoling.quiz.ui.dialog.TagPickDialog;
 import com.ziruoling.quiz.ui.dialog.TextEditDialog;
+import com.ziruoling.quiz.ui.dialog.TypeFilterDialog;
 import com.ziruoling.quiz.util.ShareUtil;
 import com.ziruoling.quiz.util.SoundFx;
 import com.ziruoling.quiz.util.TextUtil;
@@ -65,6 +69,14 @@ public class PracticeActivity extends BaseActivity {
     private static final String EXTRA_IDS = "ids";
     private static final String EXTRA_START = "start";
     private static final String EXTRA_MODE = "mode";
+
+    private static boolean pendingSpecial;
+    private boolean special;
+
+    /** 由专项入口在 startPractice 前调用，标记本次为专项会话 */
+    public static void setPendingSpecial() {
+        pendingSpecial = true;
+    }
     private static final String EXTRA_BANK = "bank";
     private static final String EXTRA_TITLE = "title";
     private static final String EXTRA_PROGRESS = "progress";
@@ -98,9 +110,12 @@ public class PracticeActivity extends BaseActivity {
     private final Set<Long> sessionWrong = new HashSet<>();
     private int sessionAnswered = 0;
     private int sessionCorrectCount = 0;
+    /** 多空填空「有未填写的内容」二次点击窗口：上次拦截的题目 id 与时间（elapsedRealtime 毫秒） */
+    private long fillGuardQid = -1;
+    private long fillGuardAt = 0L;
     private long currentQid = -1;
     /** 背题模式：当前题答案是否已显示 */
-    private boolean reciteRevealed;
+    private boolean reciteRandom;
     /** 左右滑动切题手势 */
     private GestureDetector gestureDetector;
 
@@ -108,6 +123,7 @@ public class PracticeActivity extends BaseActivity {
     private android.view.View noteCard;
     private LinearLayout headChips, optionsBox, resultCard, analysisCard, fillBox, shortBox;
     private EditText fillEt, shortEt;
+    private final java.util.List<EditText> blankEts = new java.util.ArrayList<>();
     private TextView btnFillSubmit, btnShortSubmit, btnMultiConfirm;
     private TextView btnShare, btnSheet, btnFav, btnFlag, btnPrev, btnNext, btnRemoveWrong;
     /** 当前题目展示用的选项顺序（分享时保持一致） */
@@ -143,6 +159,25 @@ public class PracticeActivity extends BaseActivity {
      * 同一题库每次进入顺序相同（「从上次继续」的位置依然有效），又能避免顺序记忆。
      * 由入口调用（BankHome / 收藏背题），PracticeActivity 内不再重复打乱。
      */
+    /** 无种子洗牌：每次进入随机背题都换一个顺序 */
+    public static void reciteShuffleSeedless(long[] ids) {
+        if (ids == null || ids.length < 2) return;
+        java.util.Random rnd = new java.util.Random(System.nanoTime());
+        for (int i = ids.length - 1; i > 0; i--) {
+            int j = rnd.nextInt(i + 1);
+            long t = ids[i];
+            ids[i] = ids[j];
+            ids[j] = t;
+        }
+    }
+
+    /** 本次会话是否「随机背题」（答题卡跳题时用于重新打乱后续） */
+    private static boolean reciteRandomSession = false;
+
+    public static void setReciteRandom(boolean random) {
+        reciteRandomSession = random;
+    }
+
     public static void reciteShuffle(long[] ids, long bankId) {
         if (ids == null || ids.length < 2) return;
         java.util.Random rnd = new java.util.Random(bankId * 31L + 17);
@@ -163,12 +198,24 @@ public class PracticeActivity extends BaseActivity {
         if (ids == null) ids = new long[0];
         cur = Math.max(0, Math.min(getIntent().getIntExtra(EXTRA_START, 0), Math.max(0, ids.length - 1)));
         mode = getIntent().getIntExtra(EXTRA_MODE, MODE_PRACTICE);
+        reciteRandom = reciteRandomSession;
         bankId = getIntent().getLongExtra(EXTRA_BANK, 0);
         titleText = getIntent().getStringExtra(EXTRA_TITLE);
         if (titleText == null) titleText = "";
         saveProgress = getIntent().getBooleanExtra(EXTRA_PROGRESS, false);
         restoreAnswered = getIntent().getBooleanExtra(EXTRA_RESTORE, false);
+        special = pendingSpecial;
+        pendingSpecial = false;
         if (restoreAnswered) restoreAllAnswered();
+        if (special) {
+            java.util.Map<Long, Boolean> done = Db.specialDone(bankId);
+            for (java.util.Map.Entry<Long, Boolean> e : done.entrySet()) {
+                answeredSet.add(e.getKey());
+                correctMap.put(e.getKey(), e.getValue());
+                userAnswers.put((int) (long) e.getKey(), "");
+                restoredIds.add(e.getKey());
+            }
+        }
 
         TextView titleTv = findViewById(R.id.title);
         counterTv = findViewById(R.id.counter);
@@ -201,6 +248,7 @@ public class PracticeActivity extends BaseActivity {
 
         titleTv.setText(titleText.isEmpty() ? "刷题" : titleText);
         if (mode == MODE_RECITE) btnMultiConfirm.setVisibility(View.GONE);
+        setupAutoBall();
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         btnPrev.setOnClickListener(v -> {
@@ -212,6 +260,14 @@ public class PracticeActivity extends BaseActivity {
         btnNext.setOnClickListener(v -> next());
         btnFav.setOnClickListener(v -> toggleFav());
         btnShare.setOnClickListener(v -> shareCurrent());
+        if (btnShare != null) {
+            btnShare.setTextColor(Ui.attrColor(this, R.attr.qzOnPrimary));
+            btnShare.setBackground(Ui.bgStroke(this, 0x00000000,
+                    Ui.attrColor(this, R.attr.qzOnPrimary), Ui.dp(this, 16)));
+            btnShare.setPadding(Ui.dp(this, 14), 0, Ui.dp(this, 14), 0);
+            btnShare.setTextSize(13);
+            btnShare.setMinWidth(Ui.dp(this, 64));
+        }
         // 答案卡 / 解析卡长按：修改答案、编辑解析、重做本题（不占用界面空间）
         resultCard.setOnLongClickListener(v -> {
             showQuestionMenu();
@@ -242,7 +298,6 @@ public class PracticeActivity extends BaseActivity {
             btnRemoveWrong.setVisibility(View.GONE);
             Ui.toast(this, "已移出错题本");
         });
-        btnReveal.setOnClickListener(v -> toggleReciteAnswer());
         btnSheet.setOnClickListener(v -> showSheet());
         btnFillSubmit.setOnClickListener(v -> submitFill());
         btnShortSubmit.setOnClickListener(v -> showShortAnswer());
@@ -280,17 +335,241 @@ public class PracticeActivity extends BaseActivity {
     /** 手势总入口：旁路识别手势，不消费任何事件（点击/滚动不受影响） */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (gestureDetector != null) gestureDetector.onTouchEvent(ev);
+        // 摸到悬浮球/边缘条时不走左右滑动翻页
+        if (gestureDetector != null && !hitsBall(ev)) gestureDetector.onTouchEvent(ev);
         return super.dispatchTouchEvent(ev);
+    }
+
+    /** 背题：翻到尚未浏览过的题时，刷新题库使用时间 */
+    private void touchReciteIfUnseen() {
+        if (mode != MODE_RECITE) return;
+        if (cur < 0 || cur >= ids.length) return;
+        if (!Db.isReciteSeen(bankId, ids[cur])) Db.touchBank(bankId);
     }
 
     private void next() {
         if (cur >= ids.length - 1) {
-            showSummary();
+            if (mode == MODE_RECITE) {
+                promptReciteFinished();
+            } else {
+                showSummary();
+            }
             return;
         }
         cur++;
+        touchReciteIfUnseen();
         render(SLIDE_NEXT);
+    }
+
+    /** 随机背题下从答题卡跳题：以目标题为首，其余题目重新打乱 */
+    private void jumpReciteRandom(int pos) {
+        long target = ids[pos];
+        java.util.List<Long> rest = new java.util.ArrayList<>();
+        for (long id : ids) if (id != target) rest.add(id);
+        long[] arr = new long[rest.size()];
+        for (int i = 0; i < arr.length; i++) arr[i] = rest.get(i);
+        reciteShuffleSeedless(arr);
+        long[] nextIds = new long[arr.length + 1];
+        nextIds[0] = target;
+        System.arraycopy(arr, 0, nextIds, 1, arr.length);
+        ids = nextIds;
+        cur = 0;
+        touchReciteIfUnseen();
+        render(SLIDE_NEXT);
+    }
+
+    /** 背题：全部浏览完 */
+    private void promptReciteFinished() {
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("提示")
+                .setMessage("所有题已经浏览完\n是否按当前模式重新开始？")
+                .setPositiveButton("是", (d, w) -> restartReciteRound())
+                .setNegativeButton("否", (d, w) -> finish())
+                .show();
+    }
+
+    /** 清空已看，按当前模式重开一轮（随机则重新打乱） */
+    private void restartReciteRound() {
+        Db.resetRecite(bankId);
+        java.util.List<Long> all = Db.questionIds(bankId);
+        long[] arr = new long[all.size()];
+        for (int i = 0; i < arr.length; i++) arr[i] = all.get(i);
+        if (reciteRandom) reciteShuffleSeedless(arr);
+        ids = arr;
+        cur = 0;
+        answeredSet.clear();
+        restoredIds.clear();
+        userAnswers.clear();
+        correctMap.clear();
+        qCache.clear();
+        displayAnswerCache.clear();
+        shuffledCache.clear();
+        // 重开一轮即新的一轮：本次会话统计一并清零，避免第二轮小结累计第一轮
+        sessionAnswered = 0;
+        sessionCorrectCount = 0;
+        sessionWrong.clear();
+        render();
+    }
+
+    // ---------------- 自动背题悬浮球 ----------------
+
+    private TextView autoBall;
+    private android.view.View autoOverlay;
+    private android.os.Handler autoHandler;
+    private Runnable autoTick;
+    private boolean autoPlaying;
+
+    private boolean hitsBall(android.view.MotionEvent e) {
+        return hitTest(autoBall, e);
+    }
+
+    private boolean hitTest(View v, android.view.MotionEvent e) {
+        if (v == null || v.getVisibility() != View.VISIBLE) return false;
+        int[] loc = new int[2];
+        v.getLocationOnScreen(loc);
+        float x = e.getRawX();
+        float y = e.getRawY();
+        return x >= loc[0] && x <= loc[0] + v.getWidth()
+                && y >= loc[1] && y <= loc[1] + v.getHeight();
+    }
+
+    private void setupAutoBall() {
+        if (mode != MODE_RECITE || !Prefs.autoReciteBall()) return;
+        final android.widget.FrameLayout root = findViewById(android.R.id.content);
+        autoBall = new TextView(this);
+        autoBall.setText("自动");
+        autoBall.setTextSize(12);
+        autoBall.setGravity(android.view.Gravity.CENTER);
+        autoBall.setTextColor(Ui.attrColor(this, R.attr.qzOnPrimary));
+        autoBall.setAlpha(0.72f);
+        int primary = Ui.attrColor(this, R.attr.qzPrimary);
+        autoBall.setBackground(Ui.bg((primary & 0x00FFFFFF) | 0xCC000000, Ui.dp(this, 24)));
+        int size = Ui.dp(this, 46);
+        android.widget.FrameLayout.LayoutParams lp =
+                new android.widget.FrameLayout.LayoutParams(size, size);
+        lp.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
+        lp.leftMargin = Prefs.ballX() >= 0 ? Prefs.ballX() : Ui.dp(this, 300);
+        lp.topMargin = Prefs.ballY() >= 0 ? Prefs.ballY() : Ui.dp(this, 520);
+        root.addView(autoBall, lp);
+
+        autoBall.setOnTouchListener(new android.view.View.OnTouchListener() {
+            float downX, downY;
+            int startX, startY;
+            boolean moved;
+
+            @Override
+            public boolean onTouch(android.view.View v, android.view.MotionEvent e) {
+                android.widget.FrameLayout.LayoutParams p =
+                        (android.widget.FrameLayout.LayoutParams) v.getLayoutParams();
+                switch (e.getActionMasked()) {
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        downX = e.getRawX();
+                        downY = e.getRawY();
+                        startX = p.leftMargin;
+                        startY = p.topMargin;
+                        moved = false;
+                        return true;
+                    case android.view.MotionEvent.ACTION_MOVE:
+                        int dx = (int) (e.getRawX() - downX);
+                        int dy = (int) (e.getRawY() - downY);
+                        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+                        p.leftMargin = Math.max(0, startX + dx);
+                        p.topMargin = Math.max(0, startY + dy);
+                        v.setLayoutParams(p);
+                        return true;
+                    case android.view.MotionEvent.ACTION_UP:
+                        if (!moved) {
+                            v.performClick();
+                        } else {
+                            snapNow();   // 松手立即贴边
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+        autoBall.setOnClickListener(v -> showAutoDialog());
+    }
+
+    /** 松手后立即贴到最近的左右边缘，并开始 5 秒倒计时 */
+    private void snapNow() {
+        if (autoBall == null) return;
+        android.widget.FrameLayout.LayoutParams p =
+                (android.widget.FrameLayout.LayoutParams) autoBall.getLayoutParams();
+        int w = getResources().getDisplayMetrics().widthPixels;
+        boolean left = (p.leftMargin + autoBall.getWidth() / 2) < w / 2;
+        p.leftMargin = left ? 0 : Math.max(0, w - autoBall.getWidth());
+        autoBall.setLayoutParams(p);
+        Prefs.ballPos(p.leftMargin, p.topMargin);
+
+    }
+
+    /** 选择间隔并开始自动背题 */
+    private void showAutoDialog() {
+        final String[] labels = {"5 秒", "10 秒", "15 秒", "自定义（1-60 秒）"};
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("自动背题")
+                .setItems(labels, (d, which) -> {
+                    if (which < 3) {
+                        Prefs.autoReciteGap(which == 0 ? 5 : (which == 1 ? 10 : 15));
+                        startAuto();
+                    } else {
+                        com.ziruoling.quiz.ui.dialog.InputDialog.showNumber(this,
+                                "间隔秒数", "输入 1 - 60", input -> {
+                                    String dg = input == null ? "" : input.replaceAll("[^0-9]", "");
+                                    if (dg.isEmpty()) {
+                                        Ui.toast(this, "请输入数字");
+                                        return;
+                                    }
+                                    Prefs.autoReciteGap(Integer.parseInt(dg));
+                                    startAuto();
+                                });
+                    }
+                })
+                .setNegativeButton("关闭", null)
+                .show();
+    }
+
+    private void startAuto() {
+        if (autoPlaying) return;
+        autoPlaying = true;
+        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Ui.toast(this, "自动背题已开始，点屏幕任意位置停止");
+        // 全屏透明遮罩：任意点击停止
+        android.widget.FrameLayout root = findViewById(android.R.id.content);
+        autoOverlay = new android.view.View(this);
+        autoOverlay.setBackgroundColor(0x05000000);
+        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT);
+        root.addView(autoOverlay, lp);
+        autoOverlay.bringToFront();
+        autoBall.bringToFront();
+        autoOverlay.setOnClickListener(v -> stopAuto());
+
+        autoHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        autoTick = () -> {
+            if (!autoPlaying) return;
+            if (cur >= ids.length - 1) {
+                stopAuto();
+                promptReciteFinished();
+                return;
+            }
+            next();
+            autoHandler.postDelayed(autoTick, Prefs.autoReciteGap() * 1000L);
+        };
+        autoHandler.postDelayed(autoTick, Prefs.autoReciteGap() * 1000L);
+    }
+
+    private void stopAuto() {
+        autoPlaying = false;
+        if (autoHandler != null) autoHandler.removeCallbacksAndMessages(null);
+        if (autoOverlay != null) {
+            ((android.view.ViewGroup) autoOverlay.getParent()).removeView(autoOverlay);
+            autoOverlay = null;
+        }
+        getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (autoBall != null) autoBall.setAlpha(0.72f);
     }
 
     // ---------------- 渲染 ----------------
@@ -319,6 +598,10 @@ public class PracticeActivity extends BaseActivity {
     /** 笔记区只在题目做完后出现 */
     private void updateNoteCardVisible(Question q) {
         if (noteCard == null) return;
+        if (mode == MODE_RECITE) {
+            noteCard.setVisibility(android.view.View.VISIBLE);
+            return;
+        }
         boolean answered = q != null && answeredSet.contains(q.id);
         noteCard.setVisibility(answered ? android.view.View.VISIBLE : android.view.View.GONE);
     }
@@ -336,7 +619,7 @@ public class PracticeActivity extends BaseActivity {
         LinearLayout wrap = new LinearLayout(this);
         wrap.setPadding(pad, Ui.dp(this, 12), pad, 0);
         wrap.addView(et);
-        new AlertDialog.Builder(this)
+        new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
                 .setTitle("笔记")
                 .setView(wrap)
                 .setPositiveButton("保存", (d, w) -> {
@@ -375,7 +658,11 @@ public class PracticeActivity extends BaseActivity {
         }
         Question q = getQ(ids[cur]);
         currentQid = q.id;
-        if (saveProgress && (mode == MODE_PRACTICE || mode == MODE_RECITE)) {
+        if (mode == MODE_RECITE) {
+            // 背题模式：独立进度，且记录「已看」，不影响顺序/随机
+            Db.setReciteProgress(bankId, q.id);
+            Db.markReciteSeen(bankId, q.id);
+        } else if (saveProgress && mode == MODE_PRACTICE) {
             Db.setProgress(bankId, q.id);
         }
         counterTv.setText((cur + 1) + " / " + ids.length);
@@ -406,11 +693,17 @@ public class PracticeActivity extends BaseActivity {
         btnMultiConfirm.setVisibility(View.GONE);
         fillEt.setText("");
         shortEt.setText("");
+        // 换题 / 重绘即作废上一次「二次点击才提交」的窗口
+        fillGuardQid = -1;
+        fillGuardAt = 0L;
         boolean answered = answeredSet.contains(q.id);
         if (!answered && restoreAnswered) answered = restoreAnsweredState(q.id);
+        // 笔记区只在「这道题确实已作答」时出现
+        updateNoteCardVisible(q);
         boolean recite = mode == MODE_RECITE;
         if (q.type == QuestionType.FILL && !answered && !recite) {
             fillBox.setVisibility(View.VISIBLE);
+            buildFillInputs(q);
         } else if ((q.type == QuestionType.SHORT || q.type == QuestionType.OTHER) && !answered && !recite) {
             shortBox.setVisibility(View.VISIBLE);
         } else if (q.type == QuestionType.SORT && !answered && !recite) {
@@ -576,14 +869,87 @@ public class PracticeActivity extends BaseActivity {
     }
 
     /** 填空：输入后点提交 */
+    /** 按题干空数生成多个输入框（第 1 空复用原输入框） */
+    private void buildFillInputs(Question q) {
+        for (int i = blankEts.size() - 1; i >= 1; i--) {
+            View v = blankEts.remove(i);
+            if (v.getParent() instanceof android.view.ViewGroup) {
+                ((android.view.ViewGroup) v.getParent()).removeView(v);
+            }
+        }
+        blankEts.clear();
+        fillEt.setVisibility(View.VISIBLE);
+        blankEts.add(fillEt);
+        int n = AnswerUtil.blankCount(q.content);
+        int base = ((android.view.ViewGroup) fillEt.getParent()).indexOfChild(fillEt);
+        for (int i = 1; i < n; i++) {
+            EditText e = new EditText(this);
+            e.setHint("第 " + (i + 1) + " 空");
+            e.setTextSize(15);
+            e.setTextColor(Ui.attrColor(this, R.attr.qzText));
+            e.setHintTextColor(Ui.attrColor(this, R.attr.qzTextSub));
+            e.setPadding(Ui.dp(this, 12), Ui.dp(this, 8), Ui.dp(this, 12), Ui.dp(this, 8));
+            e.setBackground(Ui.bg(Ui.attrColor(this, R.attr.qzChipBg), Ui.dp(this, 8)));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.topMargin = Ui.dp(this, 8);
+            ((android.view.ViewGroup) fillEt.getParent()).addView(e, base + i, lp);
+            blankEts.add(e);
+        }
+    }
+
     private void submitFill() {
         Question q = getQ(ids[cur]);
+        int blanks = AnswerUtil.blankCount(q.content);
+        if (blanks > 1) {
+            // 多空填空：还有空没填时，第一次点「提交答案」只提示、不判分；
+            // 同一题 2 秒内再点一次才放行（按错判提交）。单空题保持原逻辑。
+            boolean unfinished = false;
+            for (int i = 0; i < blankEts.size(); i++) {
+                if (blankEts.get(i).getText().toString().trim().isEmpty()) {
+                    unfinished = true;
+                    break;
+                }
+            }
+            if (unfinished && !confirmFillSecondTap(q.id)) {
+                fillGuardQid = q.id;
+                fillGuardAt = SystemClock.elapsedRealtime();
+                Ui.toast(this, "有未填写的内容，确认要提交吗？");
+                return;
+            }
+            // 提交后清掉拦截窗口，避免以后同题误判成「二次点击」
+            fillGuardQid = -1;
+            fillGuardAt = 0L;
+            if (blankEts.size() > 1) {
+                String[] parts = new String[blankEts.size()];
+                StringBuilder joined = new StringBuilder();
+                for (int i = 0; i < blankEts.size(); i++) {
+                    parts[i] = blankEts.get(i).getText().toString().trim();
+                    if (i > 0) joined.append(" | ");
+                    joined.append(parts[i]);
+                }
+                judge(q, joined.toString(), AnswerUtil.matchFillBlanks(parts, q.answer));
+            } else {
+                // 兜底：题干有多个空但没有生成多个输入框时，按「|」拆已有输入
+                String input = fillEt.getText().toString().trim();
+                String[] parts = input.split("\\|", -1);
+                judge(q, input, AnswerUtil.matchFillBlanks(parts, q.answer));
+            }
+            return;
+        }
         String input = fillEt.getText().toString().trim();
         if (input.isEmpty()) {
             Ui.toast(this, "请先输入答案");
             return;
         }
         judge(q, input, AnswerUtil.matchFill(input, q.answer));
+    }
+
+    /** 同一题在上次「有未填内容」拦截后的 2 秒内再次点提交 → true（允许按错判提交） */
+    private boolean confirmFillSecondTap(long qid) {
+        if (fillGuardAt <= 0L || fillGuardQid != qid) return false;
+        return SystemClock.elapsedRealtime() - fillGuardAt <= 2000L;
     }
 
     /** 简答：查看参考答案 + 自评 */
@@ -604,6 +970,161 @@ public class PracticeActivity extends BaseActivity {
     protected void onDestroy() {
         super.onDestroy();
         SoundFx.release();
+    }
+
+    /** 专项训练结束小结：左「重做 重选」，右「返回」 */
+    private void showSpecialSummary() {
+        if (isFinishing()) return;
+        int[] st = Db.specialStats(bankId);
+        int total = st[0], done = st[1], correct = st[2];
+        int rate = done <= 0 ? 0 : Math.round(correct * 100f / done);
+
+        android.widget.LinearLayout box = new android.widget.LinearLayout(this);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int padH = Ui.dp(this, 20);
+        box.setPadding(padH, Ui.dp(this, 4), padH, Ui.dp(this, 6));
+
+        android.widget.TextView msg = new android.widget.TextView(this);
+        msg.setText("做题 " + done + " 题，正确率 " + rate + "%");
+        msg.setTextSize(15);
+        msg.setTextColor(Ui.attrColor(this, R.attr.qzPrimary));
+        box.addView(msg);
+
+        android.widget.LinearLayout row = new android.widget.LinearLayout(this);
+        row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.END);
+        row.setPadding(0, Ui.dp(this, 16), 0, Ui.dp(this, 2));
+
+        final android.app.AlertDialog dlg = new com.ziruoling.quiz.util.Ui.AlertBuilder(this)
+                .setTitle("专项训练结束")
+                .setView(box)
+                .create();
+
+        android.widget.TextView again = dialogButton("重做");
+        again.setOnClickListener(v -> {
+            dlg.dismiss();
+            Db.specialReset(bankId);
+            answeredSet.clear();
+            correctMap.clear();
+            userAnswers.clear();
+            restoredIds.clear();
+            // 重做即重开本轮：本次会话统计一并清零，否则第二轮小结会累计第一轮
+            sessionAnswered = 0;
+            sessionCorrectCount = 0;
+            sessionWrong.clear();
+            cur = 0;
+            render();
+        });
+        android.widget.TextView rePick = dialogButton("重选");
+        rePick.setOnClickListener(v -> {
+            dlg.dismiss();
+            reselectSpecialAndFinish();
+        });
+        android.widget.TextView back = dialogButton("返回");
+        back.setOnClickListener(v -> {
+            dlg.dismiss();
+            Db.specialDelete(bankId);
+            finish();
+        });
+        row.addView(again);
+        final android.view.View gap = new android.view.View(this);
+        final android.widget.LinearLayout.LayoutParams gapLp =
+                new android.widget.LinearLayout.LayoutParams(0, 1);
+        row.addView(gap, gapLp);
+        row.addView(rePick);
+        row.post(() -> {
+            gapLp.width = rePick.getWidth();
+            gap.setLayoutParams(gapLp);
+        });
+        android.view.View spacer = new android.view.View(this);
+        row.addView(spacer, new android.widget.LinearLayout.LayoutParams(0, 1, 1f));
+        row.addView(back);
+        box.addView(row);
+
+        dlg.setCancelable(false);
+        dlg.show();
+        dlg.setCanceledOnTouchOutside(false);
+        Ui.styleContent(dlg, this, false);
+    }
+
+    private android.widget.TextView dialogButton(String text) {
+        android.widget.TextView t = new android.widget.TextView(this);
+        t.setText(text);
+        t.setTextSize(14);
+        t.setTextColor(Ui.attrColor(this, R.attr.qzPrimary));
+        t.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 8));
+        return t;
+    }
+
+    /**
+     * 专项小结「重选」：删掉本次专项会话，回题库页后自动弹出「专项练习」选题弹窗。
+     *
+     * 本工程不允许改题库页（无法像重构版那样在 BankHome 里消费 SpecialPickerRequest），
+     * 所以用一次性的 Activity 生命周期回调做中转：本页 finish 后第一个重新 resume 的
+     * 页面（题库页）负责把现有的选题弹窗（TypeFilterDialog）弹出来。
+     */
+    private void reselectSpecialAndFinish() {
+        Db.specialDelete(bankId);
+        getApplication().registerActivityLifecycleCallbacks(
+                new SpecialPickOnResume(getApplication(), bankId));
+        finish();
+    }
+
+    /** 题库页：打开专项选题弹窗（与 BankHomeActivity.pickSpecial 的流程一致） */
+    private static void showSpecialPicker(Activity a, long bid) {
+        TypeFilterDialog.show(a, bid, (mask, category, random) -> {
+            java.util.List<Long> ids = Db.questionIdsByFilter(bid, mask, category, random);
+            if (ids.isEmpty()) {
+                Ui.toast(a, "该组合下没有题目");
+                return;
+            }
+            Db.saveSpecial(bid, ids);
+            setPendingSpecial();
+            startPractice(a, bid, ids, 0, MODE_PRACTICE, "专项练习", false);
+        });
+    }
+
+    /** 「重选」后的一次性中转：题库页重新 resume 时弹选题弹窗，触发一次后自动注销 */
+    private static final class SpecialPickOnResume
+            implements Application.ActivityLifecycleCallbacks {
+        private final Application app;
+        private final long bid;
+
+        SpecialPickOnResume(Application app, long bid) {
+            this.app = app;
+            this.bid = bid;
+        }
+
+        @Override
+        public void onActivityCreated(Activity a, Bundle b) {
+        }
+
+        @Override
+        public void onActivityStarted(Activity a) {
+        }
+
+        @Override
+        public void onActivityResumed(Activity a) {
+            if (a instanceof PracticeActivity) return; // 还没离开练习页，继续等
+            app.unregisterActivityLifecycleCallbacks(this);
+            a.getWindow().getDecorView().post(() -> showSpecialPicker(a, bid));
+        }
+
+        @Override
+        public void onActivityPaused(Activity a) {
+        }
+
+        @Override
+        public void onActivityStopped(Activity a) {
+        }
+
+        @Override
+        public void onActivitySaveInstanceState(Activity a, Bundle b) {
+        }
+
+        @Override
+        public void onActivityDestroyed(Activity a) {
+        }
     }
 
     /** 判分落库 */
@@ -630,6 +1151,14 @@ public class PracticeActivity extends BaseActivity {
         // 也就永远看不到「移出错题本」按钮。
         boolean forceResolve = Prefs.wrongAutoRemove();
         Db.addRecord(q.bankId, q.id, 0, userAnswer, correct, forceResolve);
+        if (special) {
+            Db.specialMark(bankId, q.id, correct);
+            int[] st = Db.specialStats(bankId);
+            if (st[0] > 0 && st[1] >= st[0]) {
+                handler.postDelayed(this::showSpecialSummary, 700);
+            }
+        }
+        Prefs.snakeGateOnAnswer();
         showAnswerPanel(q, userAnswer, correct);
         updateRemoveWrongButton(q);
         if (correct && Prefs.autoNext()) {
@@ -661,17 +1190,17 @@ public class PracticeActivity extends BaseActivity {
         } else {
             resultCard.setBackground(Ui.bg(Ui.attrColor(this, R.attr.qzPrimaryBg), Ui.dp(this, 14)));
             verdict.setTextColor(Ui.attrColor(this, R.attr.qzPrimary));
-            verdict.setText("背题模式 · 先回忆再看答案");
+            verdict.setText("背题模式 · 答案");
             answerTv.setText(TextUtil.rich("正确答案：" + answerDisplay(q, dispAnswer)));
             // 背题模式：显隐状态全局记忆——选择「显示」后后续所有题都显示
-            answerTv.setVisibility(reciteRevealed ? View.VISIBLE : View.GONE);
-            btnReveal.setText(reciteRevealed ? "隐藏答案 ▴" : "显示答案 ▾");
-            btnReveal.setVisibility(View.VISIBLE);
+            answerTv.setVisibility(View.VISIBLE);
+            btnReveal.setVisibility(View.GONE);
+            applyReciteHighlight(q, true);
         }
         answerTv.setTextColor(Ui.attrColor(this, R.attr.qzText));
         if (q.analysis != null && !q.analysis.isEmpty()) {
             analysisTv.setText(TextUtil.rich(q.analysis));
-            boolean show = correct != null || reciteRevealed;
+            boolean show = true;
             analysisCard.setVisibility(show ? View.VISIBLE : View.GONE);
         }
         if (correct != null) {
@@ -683,7 +1212,7 @@ public class PracticeActivity extends BaseActivity {
 
     private String answerDisplay(Question q, String dispAnswer) {
         if (q.type == QuestionType.JUDGE) {
-            return AnswerUtil.judgeText(AnswerUtil.normalizeJudge(dispAnswer));
+            return AnswerUtil.answerDisplay(QuestionType.JUDGE, dispAnswer);
         }
         if (q.type == QuestionType.FILL || q.type == QuestionType.SHORT || q.type == QuestionType.OTHER) {
             return q.answer == null ? "" : q.answer;
@@ -699,14 +1228,46 @@ public class PracticeActivity extends BaseActivity {
             return sb.toString();
         }
         StringBuilder sb = new StringBuilder();
+        // 选项文本必须按「当前展示顺序」取：开了随机选项时 currentOpts 已打乱，
+        // 而 dispAnswer 也已重映射成展示字母，用 q.options 会张冠李戴。
+        List<String> dispOpts = currentOpts;
         for (char c : AnswerUtil.extractLetters(dispAnswer).toCharArray()) {
             int idx = c - 'A';
-            if (idx >= 0 && idx < q.options.size()) {
+            if (idx >= 0 && idx < dispOpts.size()) {
                 if (sb.length() > 0) sb.append("  ");
-                sb.append(c).append(". ").append(q.options.get(idx));
+                sb.append(c).append(". ").append(dispOpts.get(idx));
             }
         }
         return sb.toString();
+    }
+
+    /** 背题模式：展开答案时标出正确选项（之前完全不高亮，看起来像"答案对不上"） */
+    private void applyReciteHighlight(Question q, boolean on) {
+        for (int i = 0; i < optionsBox.getChildCount(); i++) {
+            OptionView ov = optionAt(i);
+            ov.sortNo = -1;
+            ov.setState(OptionView.STATE_NORMAL);
+        }
+        if (!on) return;
+        String ans = displayAnswerCache.get(q.id);
+        if (q.type == QuestionType.SORT) {
+            String seq = AnswerUtil.extractSequence(ans);
+            for (int i = 0; i < optionsBox.getChildCount(); i++) {
+                OptionView ov = optionAt(i);
+                int pos = seq.indexOf(ov.letter);
+                if (pos >= 0) {
+                    ov.sortNo = pos + 1;
+                    ov.setState(OptionView.STATE_CORRECT);
+                }
+            }
+            return;
+        }
+        Set<Character> correct = new HashSet<>();
+        for (char c : AnswerUtil.extractLetters(ans).toCharArray()) correct.add(c);
+        for (int i = 0; i < optionsBox.getChildCount(); i++) {
+            OptionView ov = optionAt(i);
+            ov.setState(correct.contains(ov.letter) ? OptionView.STATE_CORRECT : OptionView.STATE_DIM);
+        }
     }
 
     private void highlightOptions(Question q, String userAnswer, boolean correct) {
@@ -983,25 +1544,18 @@ public class PracticeActivity extends BaseActivity {
     }
 
     /**
-     * 错题重做模式下，作答完且该题仍在错题本（未掌握）时，显示「移出错题本」。
+     * 错题重做模式下，本题「答对」且仍在错题本（未掌握）时，才显示「移出错题本」。
+     * 答错说明还没掌握，不该给「移出」入口（与重构版 removeWrongVisible 一致）。
      * 注意：答完题不会整体重绘，所以判断后要单独更新一次。
      */
     private void updateRemoveWrongButton(Question q) {
         boolean show = q != null && answeredSet.contains(q.id)
+                && Boolean.TRUE.equals(correctMap.get(q.id))
                 && mode == MODE_WRONG && Db.wrongStatus(q.id) == 1;
         btnRemoveWrong.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     /** 背题模式：显示 / 隐藏答案 */
-    private void toggleReciteAnswer() {
-        if (mode != MODE_RECITE || ids.length == 0) return;
-        reciteRevealed = !reciteRevealed;
-        Question q = getQ(ids[cur]);
-        answerTv.setVisibility(reciteRevealed ? View.VISIBLE : View.GONE);
-        boolean hasAnalysis = q.analysis != null && !q.analysis.isEmpty();
-        analysisCard.setVisibility(reciteRevealed && hasAnalysis ? View.VISIBLE : View.GONE);
-        btnReveal.setText(reciteRevealed ? "隐藏答案 ▴" : "显示答案 ▾");
-    }
 
     /**
      * 计算答题卡状态：0 未答 / 1 本次答对 / 2 本次答错 / 3 历史答对 / 4 历史答错。
@@ -1040,6 +1594,29 @@ public class PracticeActivity extends BaseActivity {
 
     private void showSheet() {
         int n = ids.length;
+        if (mode == MODE_RECITE) {
+            int[] seen = new int[n];
+            int seenCount = 0;
+            for (int i = 0; i < n; i++) {
+                if (Db.isReciteSeen(bankId, ids[i])) {
+                    seen[i] = 5;
+                    seenCount++;
+                }
+            }
+            AnswerSheetDialog.show(this, n, cur, seen,
+                    "答题卡（已看 " + seenCount + "/" + n + "）",
+                    pos -> {
+                        if (reciteRandom) {
+                            jumpReciteRandom(pos);
+                        } else {
+                            int from = cur;
+                            cur = pos;
+                            touchReciteIfUnseen();
+                            render(from <= pos ? SLIDE_NEXT : SLIDE_PREV);
+                        }
+                    });
+            return;
+        }
         int[] counts = new int[2];
         int[] states = sheetStates(counts);
         String title = "答题卡（本次 " + counts[0] + "/" + n
@@ -1061,6 +1638,10 @@ public class PracticeActivity extends BaseActivity {
                 .create();
         if (!sessionWrong.isEmpty()) {
             d.setButton(AlertDialog.BUTTON_NEUTRAL, "重练错题", (dd, w) -> {
+                // 新会话是独立的「错题重练」：清掉专项 / 随机背题的进程级标记，
+                // 避免新会话被当成专项会话或随机背题会话（对应重构版 route.copy 里 special/reciteRandom 置 false）
+                pendingSpecial = false;
+                reciteRandomSession = false;
                 List<Long> wrongIds = new ArrayList<>(sessionWrong);
                 startPractice(this, bankId, wrongIds, 0, MODE_WRONG, "错题重练", false);
                 finish();
@@ -1152,7 +1733,15 @@ public class PracticeActivity extends BaseActivity {
             if (type == QuestionType.MULTI) {
                 selected = !selected;
                 setState(selected ? STATE_SELECTED : STATE_NORMAL);
-                btnMultiConfirm.setVisibility(optionsBox.getChildCount() > 0 ? View.VISIBLE : View.GONE);
+                // 「确认答案」只在有勾选时显示：全部取消勾选后要跟着隐藏
+                boolean anySelected = false;
+                for (int i = 0; i < optionsBox.getChildCount(); i++) {
+                    if (((OptionView) optionsBox.getChildAt(i)).selected) {
+                        anySelected = true;
+                        break;
+                    }
+                }
+                btnMultiConfirm.setVisibility(anySelected ? View.VISIBLE : View.GONE);
                 return;
             }
             // 单选 / 判断

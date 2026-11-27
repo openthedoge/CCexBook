@@ -220,7 +220,7 @@ public class QuestionListActivity extends BaseActivity {
                         EditQuestionActivity.start(this, qid, 0);
                     } else {
                         com.ziruoling.quiz.ui.dialog.ConfirmDialog.showDanger(this, "删除题目",
-                                "将永久删除这道题及其作答记录、错题、收藏与标记；后面的题目会自动前移。确定删除？",
+                                "将永久删除这道题及其作答记录；该题的收藏 / 标记 / 笔记会一起删除；后面的题目会自动前移。确定删除？",
                                 () -> {
                                     Db.deleteQuestion(qid);
                                     load();

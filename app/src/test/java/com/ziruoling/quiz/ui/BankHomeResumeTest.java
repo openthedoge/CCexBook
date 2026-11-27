@@ -124,6 +124,52 @@ public class BankHomeResumeTest {
 
     // ==================== 顺序练习：自定义起始题号 ====================
 
+    private android.app.Dialog latestSheet() {
+        return org.robolectric.shadows.ShadowDialog.getLatestDialog();
+    }
+
+    private void collectTexts(View v, java.util.List<String> out) {
+        if (v instanceof TextView) {
+            CharSequence cs = ((TextView) v).getText();
+            if (cs != null && cs.length() > 0) out.add(cs.toString());
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) collectTexts(g.getChildAt(i), out);
+        }
+    }
+
+    private java.util.List<String> sheetTexts() {
+        android.app.Dialog d = latestSheet();
+        assertNotNull("应弹出底部选择器", d);
+        java.util.List<String> out = new java.util.ArrayList<>();
+        collectTexts(d.getWindow().getDecorView(), out);
+        return out;
+    }
+
+    private void clickSheet(String contains) {
+        android.app.Dialog d = latestSheet();
+        assertNotNull(d);
+        TextView t = findByText(d.getWindow().getDecorView(), contains);
+        assertTrue("底部选择器里未找到「" + contains + "」", t != null);
+        t.performClick();
+    }
+
+    private TextView findByText(View v, String contains) {
+        if (v instanceof TextView) {
+            CharSequence cs = ((TextView) v).getText();
+            if (cs != null && cs.toString().contains(contains)) return (TextView) v;
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                TextView r = findByText(g.getChildAt(i), contains);
+                if (r != null) return r;
+            }
+        }
+        return null;
+    }
+
     private android.app.AlertDialog latestDialog() {
         return org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();
     }

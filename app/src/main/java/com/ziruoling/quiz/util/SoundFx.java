@@ -38,17 +38,44 @@ public final class SoundFx {
     public static void play(final boolean correct) {
         if (!Prefs.sound()) return;
         player.execute(() -> {
-            // 首选：AudioTrack 流式播放
-            if (!playOnTrack(correct)) {
-                // 兜底：系统提示音
-                playTone(correct);
-            }
+            if (playCustom(correct)) return;
+            if (!playOnTrack(correct)) playTone(correct);
         });
+    }
+
+    /** 播放用户替换的音效；无自定义时返回 false */
+    private static boolean playCustom(boolean correct) {
+        String path = Prefs.customSound(correct);
+        if (path == null || path.isEmpty()) return false;
+        java.io.File f = new java.io.File(path);
+        if (!f.exists()) return false;
+        android.media.MediaPlayer mp = null;
+        try {
+            mp = new android.media.MediaPlayer();
+            mp.setDataSource(path);
+            mp.prepare();
+            mp.setOnCompletionListener(android.media.MediaPlayer::release);
+            mp.setOnErrorListener((m, what, extra) -> {
+                m.release();
+                return true;
+            });
+            mp.start();
+            return true;
+        } catch (Throwable t) {
+            if (mp != null) {
+                try {
+                    mp.release();
+                } catch (Throwable ignored) {
+                }
+            }
+            return false;
+        }
     }
 
     /** 试听入口：不受设置开关限制（排查音效问题用） */
     public static void preview(final boolean correct) {
         player.execute(() -> {
+            if (playCustom(correct)) return;
             if (!playOnTrack(correct)) playTone(correct);
         });
     }
